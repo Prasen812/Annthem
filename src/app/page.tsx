@@ -1,3 +1,5 @@
+import { CascadePlayer } from '@/components/player/CascadePlayer';
+
 export default function Home() {
-  return <></>;
+  return <CascadePlayer />;
 }
