@@ -1,30 +1,20 @@
 'use client';
 
-import { Accordion } from '@/components/ui/accordion';
 import { usePlayer } from '@/providers/PlayerProvider';
 import { SongCard } from './SongCard';
 
 export function SongList() {
-  const { songs, expandedSongId, expandAndPlayRecommendations, activeSong } = usePlayer();
+  const { songs } = usePlayer();
 
-  const handleValueChange = (value: string) => {
-    const song = songs.find((s) => s.id === value);
-    if (song) {
-        expandAndPlayRecommendations(song);
-    }
-  };
+  if (songs.length === 0) {
+    return <div className="mt-4 text-neutral-400">No songs available.</div>;
+  }
 
   return (
-    <Accordion
-      type="single"
-      collapsible
-      className="w-full space-y-2"
-      value={expandedSongId ?? undefined}
-      onValueChange={handleValueChange}
-    >
-      {songs.map((song, index) => (
-        <SongCard key={song.id} song={song} index={index} />
+    <div className="flex flex-col gap-y-2 w-full">
+      {songs.map((song) => (
+        <SongCard key={song.id} song={song} />
       ))}
-    </Accordion>
+    </div>
   );
 }

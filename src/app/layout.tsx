@@ -24,11 +24,11 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-body antialiased">
+      <body className="font-body antialiased bg-black text-white">
         <PlayerProvider>
           <div className="relative flex min-h-screen flex-col">
             <AppHeader />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 p-2 h-full">{children}</main>
           </div>
           <Toaster />
         </PlayerProvider>
