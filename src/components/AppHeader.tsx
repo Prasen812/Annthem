@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Music, BrainCircuit } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AnimatedHeaderDivider } from './AnimatedHeaderDivider';
 
 export function AppHeader() {
   const pathname = usePathname();
@@ -39,6 +40,7 @@ export function AppHeader() {
           ))}
         </nav>
       </div>
+      <AnimatedHeaderDivider />
     </header>
   );
 }
