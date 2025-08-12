@@ -17,9 +17,12 @@ export function AppHeader() {
       <div className="container flex h-14 max-w-screen-2xl items-center">
         <div className="mr-4 flex items-center">
           <Music className="h-6 w-6 mr-2" />
-          <Link href="/" className="font-headline text-lg font-bold">
-            Cascade Player
-          </Link>
+            <Link href="/" className="font-headline text-lg font-bold flex items-center">
+            <span className="text-[#39ff14] drop-shadow-[0_0_4px_#39ff14]">a</span>
+            <span className="text-[#00eaff] drop-shadow-[0_0_4px_#00eaff]">n</span>
+            <span className="text-[#ff00cc] drop-shadow-[0_0_4px_#ff00cc]">n</span>
+            them
+            </Link>
         </div>
         <nav className="flex items-center gap-4 text-sm lg:gap-6">
           {navLinks.map(({ href, label, icon: Icon }) => (
