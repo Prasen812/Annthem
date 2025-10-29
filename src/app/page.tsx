@@ -1,6 +1,5 @@
 
-import { HomeIcon, Search, Library, Plus, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Library, Plus } from 'lucide-react';
 import { SongList } from '@/components/player/SongList';
 import { CascadePlayer } from '@/components/player/CascadePlayer';
 import Image from 'next/image';
@@ -18,6 +17,9 @@ const popularArtists = [
 
 export default function Home() {
   const songs: Song[] = getSongs();
+  // Let's use the first few songs for the trending section
+  const trendingSongs = songs.slice(0, 5);
+
   return (
     <div className="h-full">
       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-2 h-[calc(100%-80px)]">
@@ -44,52 +46,17 @@ export default function Home() {
           <div className="p-6">
             <h2 className="text-2xl font-bold mb-4">Trending Songs</h2>
              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-               { /* This part would be dynamic in a real app */ }
-               <div className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
-                 <div className="relative aspect-square w-full h-full rounded-md overflow-hidden mb-4">
-                   <Image className="object-cover" src="https://placehold.co/150x150/1A237E/FFFFFF.png" fill alt="Album Cover" data-ai-hint="album cover" />
+              {trendingSongs.map((song) => (
+                 <div key={song.id} className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
+                   <div className="relative aspect-square w-full h-full rounded-md overflow-hidden mb-4">
+                     <Image className="object-cover" src={song.coverUrl} fill alt={song.album} data-ai-hint="album cover" />
+                   </div>
+                   <div className="flex flex-col items-start w-full gap-y-1">
+                     <p className="font-semibold truncate w-full text-base">{song.title}</p>
+                     <p className="text-neutral-400 text-sm pb-2 w-full truncate">By {song.artists.join(', ')}</p>
+                   </div>
                  </div>
-                 <div className="flex flex-col items-start w-full gap-y-1">
-                   <p className="font-semibold truncate w-full text-base">Cosmic Drift</p>
-                   <p className="text-neutral-400 text-sm pb-2 w-full truncate">By Galaxy Runners</p>
-                 </div>
-               </div>
-                <div className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
-                 <div className="relative aspect-square w-full h-full rounded-md overflow-hidden mb-4">
-                   <Image className="object-cover" src="https://placehold.co/150x150/3F51B5/FFFFFF.png" fill alt="Album Cover" data-ai-hint="album cover" />
-                 </div>
-                 <div className="flex flex-col items-start w-full gap-y-1">
-                   <p className="font-semibold truncate w-full text-base">Ocean Breath</p>
-                   <p className="text-neutral-400 text-sm pb-2 w-full truncate">By Tidal Waves</p>
-                 </div>
-               </div>
-                <div className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
-                 <div className="relative aspect-square w-full h-full rounded-md overflow-hidden mb-4">
-                   <Image className="object-cover" src="https://placehold.co/150x150/9C27B0/FFFFFF.png" fill alt="Album Cover" data-ai-hint="album cover" />
-                 </div>
-                 <div className="flex flex-col items-start w-full gap-y-1">
-                   <p className="font-semibold truncate w-full text-base">City Lights at 3 AM</p>
-                   <p className="text-neutral-400 text-sm pb-2 w-full truncate">By Neon Drive</p>
-                 </div>
-               </div>
-                <div className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
-                 <div className="relative aspect-square w-full h-full rounded-md overflow-hidden mb-4">
-                   <Image className="object-cover" src="https://placehold.co/150x150/4CAF50/FFFFFF.png" fill alt="Album Cover" data-ai-hint="album cover" />
-                 </div>
-                 <div className="flex flex-col items-start w-full gap-y-1">
-                   <p className="font-semibold truncate w-full text-base">Forest Lullaby</p>
-                   <p className="text-neutral-400 text-sm pb-2 w-full truncate">By Whispering Pines</p>
-                 </div>
-               </div>
-               <div className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
-                 <div className="relative aspect-square w-full h-full rounded-md overflow-hidden mb-4">
-                   <Image className="object-cover" src="https://placehold.co/150x150/FF9800/FFFFFF.png" fill alt="Album Cover" data-ai-hint="album cover" />
-                 </div>
-                 <div className="flex flex-col items-start w-full gap-y-1">
-                   <p className="font-semibold truncate w-full text-base">The Getaway</p>
-                   <p className="text-neutral-400 text-sm pb-2 w-full truncate">By Road Trip Heroes</p>
-                 </div>
-               </div>
+              ))}
              </div>
 
             <h2 className="text-2xl font-bold my-4">Popular Artists</h2>
