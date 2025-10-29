@@ -5,6 +5,7 @@ import { CascadePlayer } from '@/components/player/CascadePlayer';
 import Image from 'next/image';
 import { getSongs } from '@/data/songs';
 import type { Song } from '@/types';
+import { SongCoverPlaceholder } from '@/components/player/SongCoverPlaceholder';
 
 const popularArtists = [
   { name: 'Galaxy Runners', image: 'https://placehold.co/150x150/1A237E/FFFFFF.png' },
@@ -48,7 +49,11 @@ export default function Home() {
               {trendingSongs.map((song) => (
                  <div key={song.id} className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
                    <div className="relative aspect-square w-full h-full rounded-md overflow-hidden mb-4">
-                     <Image className="object-cover" src={song.coverUrl} fill alt={song.album} data-ai-hint="album cover" />
+                      {song.coverUrl ? (
+                        <Image className="object-cover" src={song.coverUrl} fill alt={song.album} data-ai-hint="album cover" />
+                      ) : (
+                        <SongCoverPlaceholder song={song} />
+                      )}
                    </div>
                    <div className="flex flex-col items-start w-full gap-y-1">
                      <p className="font-semibold truncate w-full text-base">{song.title}</p>

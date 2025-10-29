@@ -5,12 +5,14 @@ import path from 'path';
 
 let songs: Song[] | null = null;
 
-// This is a more robust CSV parser that handles quoted fields.
 function robustCsvParse(csvData: string): string[][] {
-  const rows = [];
-  let currentRow = [];
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
   let currentField = '';
   let inQuotedField = false;
+
+  // Normalize line endings
+  csvData = csvData.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
   for (let i = 0; i < csvData.length; i++) {
     const char = csvData[i];
@@ -18,7 +20,7 @@ function robustCsvParse(csvData: string): string[][] {
     if (inQuotedField) {
       if (char === '"') {
         if (i + 1 < csvData.length && csvData[i + 1] === '"') {
-          // Handle escaped quote
+          // Escaped quote
           currentField += '"';
           i++;
         } else {
@@ -30,19 +32,18 @@ function robustCsvParse(csvData: string): string[][] {
     } else {
       if (char === '"') {
         inQuotedField = true;
+        // If the field starts with a quote, discard any leading whitespace
+        if (currentField.trim() !== '') {
+            currentField += char;
+        }
       } else if (char === ',') {
-        currentRow.push(currentField);
+        currentRow.push(currentField.trim());
         currentField = '';
-      } else if (char === '\n' || char === '\r') {
-        if (i > 0 && csvData[i - 1] !== '\n' && csvData[i - 1] !== '\r') {
-           currentRow.push(currentField);
-           rows.push(currentRow);
-           currentRow = [];
-           currentField = '';
-        }
-        if (char === '\r' && csvData[i+1] === '\n') {
-           i++; // Handle CRLF line endings
-        }
+      } else if (char === '\n') {
+        currentRow.push(currentField.trim());
+        rows.push(currentRow);
+        currentRow = [];
+        currentField = '';
       } else {
         currentField += char;
       }
@@ -50,14 +51,12 @@ function robustCsvParse(csvData: string): string[][] {
   }
 
   // Add the last field and row if the file doesn't end with a newline
-  if (currentField) {
-    currentRow.push(currentField);
-  }
-  if (currentRow.length > 0) {
-    rows.push(currentRow);
+  if (currentField.trim() || currentRow.length > 0) {
+     currentRow.push(currentField.trim());
+     rows.push(currentRow);
   }
 
-  return rows;
+  return rows.filter(row => row.length > 1 || (row.length === 1 && row[0] !== ''));
 }
 
 
@@ -82,7 +81,7 @@ function parseSongs(): Song[] {
         console.error("CSV is missing one of the required columns:", requiredColumns);
         return [];
     }
-
+    
     return lines.map((line, index) => {
       if (line.length < header.length) return null;
 
@@ -95,12 +94,12 @@ function parseSongs(): Song[] {
       }
       
       const songData: Song = {
-        id: `${title}-${index}`, // Create a unique ID
+        id: `${title.replace(/\s/g, '-')}-${index}`, // Create a unique ID
         title,
         artists,
         album: 'Unknown Album',
         durationMs: 180000, // Placeholder duration
-        coverUrl: `https://placehold.co/128x128?text=${encodeURIComponent(title)}`, // Placeholder image
+        coverUrl: '', // Default to empty string to trigger placeholder
         audioUrl: '', // Placeholder audio
         tags: [],
         explicit: false,

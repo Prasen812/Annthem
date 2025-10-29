@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -5,6 +6,7 @@ import type { Song } from '@/types';
 import { cn } from '@/lib/utils';
 import { usePlayer } from '@/providers/PlayerProvider';
 import { Pause, Play } from 'lucide-react';
+import { SongCoverPlaceholder } from './SongCoverPlaceholder';
 
 interface SongCardProps {
   song: Song;
@@ -27,7 +29,11 @@ export function SongCard({ song }: SongCardProps) {
       )}
     >
       <div className="relative rounded-md min-h-[48px] min-w-[48px] overflow-hidden">
-        <Image fill src={song.coverUrl} alt={song.title} className="object-cover" data-ai-hint="album art" />
+        {song.coverUrl ? (
+            <Image fill src={song.coverUrl} alt={song.title} className="object-cover" data-ai-hint="album art" />
+        ) : (
+            <SongCoverPlaceholder song={song} />
+        )}
       </div>
       <div className="flex flex-col gap-y-1 overflow-hidden">
         <p className={cn('truncate', isThisSongActive ? 'text-primary' : 'text-white')}>

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { QueueView } from './QueueView';
 import { cn } from '@/lib/utils';
+import { SongCoverPlaceholder } from './SongCoverPlaceholder';
 
 export function Player() {
   const {
@@ -55,8 +56,12 @@ export function Player() {
 
           {/* Left/Top Part: Art + Info + Controls */}
           <div className="w-full lg:w-1/2 h-full flex flex-col items-center justify-center gap-8 pt-12 lg:pt-0">
-             <div className="relative w-64 h-64 md:w-80 md:h-80 shrink-0 shadow-2xl rounded-lg">
-                <Image src={activeSong.coverUrl} alt={activeSong.album} layout="fill" className="rounded-lg" data-ai-hint="album art" />
+             <div className="relative w-64 h-64 md:w-80 md:h-80 shrink-0 shadow-2xl rounded-lg overflow-hidden">
+                {activeSong.coverUrl ? (
+                  <Image src={activeSong.coverUrl} alt={activeSong.album} layout="fill" className="rounded-lg object-cover" data-ai-hint="album art" />
+                ) : (
+                  <SongCoverPlaceholder song={activeSong} />
+                )}
              </div>
              <div className="text-center">
                <h2 className="text-3xl font-headline font-bold">{activeSong.title}</h2>
@@ -106,8 +111,12 @@ export function Player() {
         <div className="container mx-auto px-4 h-full">
             <div className="flex items-center justify-between h-full">
                 <div className="flex items-center gap-4 w-1/4 min-w-0">
-                    <button onClick={toggleFullScreen} className="relative w-14 h-14 shrink-0">
-                      <Image src={activeSong.coverUrl} alt={activeSong.album} width={56} height={56} className="rounded-md" data-ai-hint="album art" />
+                    <button onClick={toggleFullScreen} className="relative w-14 h-14 shrink-0 rounded-md overflow-hidden">
+                      {activeSong.coverUrl ? (
+                        <Image src={activeSong.coverUrl} alt={activeSong.album} width={56} height={56} className="object-cover" data-ai-hint="album art" />
+                      ) : (
+                        <SongCoverPlaceholder song={activeSong} />
+                      )}
                     </button>
                     <div className="truncate">
                         <p className="font-semibold truncate text-foreground">{activeSong.title}</p>

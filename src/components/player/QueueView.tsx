@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -5,6 +6,7 @@ import { usePlayer } from '@/providers/PlayerProvider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Music, Volume2 } from 'lucide-react';
+import { SongCoverPlaceholder } from './SongCoverPlaceholder';
 
 export function QueueView() {
   const { queue, currentIndex, isPlaying } = usePlayer();
@@ -32,14 +34,20 @@ export function QueueView() {
               ) : (
                 <Music className="h-4 w-4 shrink-0 text-muted-foreground" />
               )}
-              <Image
-                src={item.song.coverUrl}
-                alt={item.song.album}
-                width={40}
-                height={40}
-                className="rounded"
-                data-ai-hint="album art"
-              />
+              <div className="relative w-10 h-10 rounded overflow-hidden shrink-0">
+                {item.song.coverUrl ? (
+                  <Image
+                    src={item.song.coverUrl}
+                    alt={item.song.album}
+                    width={40}
+                    height={40}
+                    className="object-cover"
+                    data-ai-hint="album art"
+                  />
+                ) : (
+                  <SongCoverPlaceholder song={item.song} />
+                )}
+              </div>
               <div className="flex-1 truncate">
                 <p className={cn("font-medium text-sm truncate", isActive ? "text-primary" : "text-foreground/90")}>{item.song.title}</p>
                 <p className="text-xs text-muted-foreground truncate">{item.song.artists.join(', ')}</p>
