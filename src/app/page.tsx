@@ -94,9 +94,9 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            <AppFooter />
         </div>
       </div>
+      <AppFooter />
       <CascadePlayer songs={songs} />
     </div>
   );
