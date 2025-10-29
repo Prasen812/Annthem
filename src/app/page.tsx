@@ -36,20 +36,22 @@ export default function Home() {
 
   return (
     <div className="h-full">
-      <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-2 h-[calc(100%-80px)]">
+      <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-2 h-[calc(100vh-240px)]">
         {/* Left Sidebar */}
         <div className="hidden md:flex flex-col gap-2 bg-black h-full">
-          <div className="bg-neutral-900 rounded-lg p-4 flex flex-col gap-y-4 h-full">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-x-4">
-                <Library className="text-neutral-400" />
-                <p className="text-neutral-400 font-medium text-md">Your Library</p>
+          <div className="bg-neutral-900 rounded-lg flex flex-col gap-y-4 h-full">
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-x-4">
+                  <Library className="text-neutral-400" />
+                  <p className="text-neutral-400 font-medium text-md">Your Library</p>
+                </div>
+                <button className="text-neutral-400 hover:text-white transition">
+                  <Plus />
+                </button>
               </div>
-              <button className="text-neutral-400 hover:text-white transition">
-                <Plus />
-              </button>
             </div>
-            <div className="flex flex-col gap-y-2 mt-4 px-3 flex-1 overflow-y-auto">
+            <div className="flex flex-col gap-y-2 px-3 flex-1 overflow-y-auto">
               <SongList songs={songs} />
             </div>
           </div>
