@@ -9,31 +9,34 @@ function robustCsvParse(csvData: string): string[][] {
     const rows = [];
     let insideQuote = false;
     let record = '';
-    for (let i = 0; i < csvData.length; i++) {
-        const char = csvData[i];
-        if (char === '"') {
+    
+    // Normalize line endings
+    const normalizedData = csvData.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+    for (let i = 0; i < normalizedData.length; i++) {
+        const char = normalizedData[i];
+        if (char === '"' && i + 1 < normalizedData.length && normalizedData[i+1] === '"') {
+            // Handle escaped quote
+            record += '"';
+            i++; 
+        } else if (char === '"') {
             insideQuote = !insideQuote;
-        }
-        if ((char === '\n' || char === '\r') && !insideQuote) {
-            if (csvData[i + 1] === '\n' || csvData[i + 1] === '\r') {
-                i++;
-            }
+        } else if ((char === '\n') && !insideQuote) {
             if (record) {
-                const values = record.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                rows.push(values.map(v => v.trim().replace(/^"|"$/g, '')));
+                 const values = record.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                 rows.push(values.map(v => v.trim().replace(/^"|"$/g, '').replace(/""/g, '"')));
             }
             record = '';
-            continue;
+        } else {
+            record += char;
         }
-        record += char;
     }
     if (record) {
         const values = record.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-        rows.push(values.map(v => v.trim().replace(/^"|"$/g, '')));
+        rows.push(values.map(v => v.trim().replace(/^"|"$/g, '').replace(/""/g, '"')));
     }
     return rows;
 }
-
 
 function parseSongs(): Song[] {
   try {
@@ -42,6 +45,7 @@ function parseSongs(): Song[] {
     const records = robustCsvParse(csvData);
     
     if (records.length < 2) return [];
+
     const header = records[0].map(h => h.trim());
     const lines = records.slice(1);
     
@@ -61,22 +65,22 @@ function parseSongs(): Song[] {
 
       const id = line[colIndices['id']];
       const title = line[colIndices['title']];
-      const artists = line[colIndices['artists']]?.split(';').map(a => a.trim()) || ['Unknown Artist'];
+      const artists = line[colIndices['artists']]?.split(';').map(a => a.trim()).filter(a => a) || ['Unknown Artist'];
 
-      if (!id || !title) {
-        console.warn(`Skipping row ${index + 2} due to missing id or title`);
+      if (!id || !title || artists.length === 0) {
+        console.warn(`Skipping row ${index + 2} due to missing id, title, or artists`);
         return null;
       }
       
       const songData: Song = {
-        id: id,
-        title: title,
-        artists: artists,
+        id,
+        title,
+        artists,
         album: line[colIndices['album']] || 'Unknown Album',
         durationMs: parseInt(line[colIndices['durationMs']], 10) || 180000,
         coverUrl: line[colIndices['coverUrl']] || `https://placehold.co/128x128?text=${encodeURIComponent(title)}`,
         audioUrl: line[colIndices['audioUrl']] || '',
-        tags: line[colIndices['tags']]?.split(';').map(t => t.trim()) || [],
+        tags: line[colIndices['tags']]?.split(';').map(t => t.trim()).filter(t => t) || [],
         explicit: line[colIndices['explicit']]?.toLowerCase() === 'true',
         releaseDate: line[colIndices['releaseDate']] || '',
         provider: line[colIndices['provider']] || 'Unknown',

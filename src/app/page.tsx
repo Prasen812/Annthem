@@ -17,7 +17,6 @@ const popularArtists = [
 
 export default function Home() {
   const songs: Song[] = getSongs();
-  // Let's use the first few songs for the trending section
   const trendingSongs = songs.slice(0, 5);
 
   return (
