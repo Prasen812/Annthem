@@ -11,7 +11,6 @@ export function AppHeader() {
 
   const navLinks = [
     { href: '/', label: 'Player' },
-    { href: '/advisor', label: 'AI Advisor' },
   ];
 
   return (
@@ -19,9 +18,7 @@ export function AppHeader() {
       <div className="container flex h-20 items-center justify-between">
         <div className="hidden md:flex gap-x-2 items-center">
           <Link href="/" className="font-headline text-2xl font-bold flex items-center">
-            <span className="text-[#39ff14] drop-shadow-[0_0_4px_#39ff14]">A</span>
-            <span className="text-[#00eaff] drop-shadow-[0_0_4px_#00eaff]">N</span>
-            <span className="text-[#ff00cc] drop-shadow-[0_0_4px_#ff00cc]">N</span>
+            <span className="text-white">ANN</span>
             <span className="text-white">them</span>
           </Link>
         </div>
