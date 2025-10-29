@@ -1,219 +1,84 @@
 import type { Song } from '@/types';
+import fs from 'fs';
+import path from 'path';
 
-const songs: Song[] = [
-  {
-    id: 'song-001',
-    title: 'Cosmic Drift',
-    artists: ['Galaxy Runners'],
-    album: 'Starlight Trails',
-    durationMs: 210000,
-    coverUrl: 'https://placehold.co/128x128/1A237E/FFFFFF.png',
-    audioUrl: '/audio/sample-1.mp3',
-    tags: ['electronic', 'ambient', 'space'],
-    explicit: false,
-    releaseDate: '2023-05-20',
-    provider: 'Bandcamp',
-    recommendations: [
-      { songId: 'song-002', score: 0.9, reasonShort: 'Similar vibe' },
-      { songId: 'song-003', score: 0.85, reasonShort: 'Shared genre' },
-    ],
-  },
-  {
-    id: 'song-002',
-    title: 'Ocean Breath',
-    artists: ['Tidal Waves'],
-    album: 'Deep Blue',
-    durationMs: 245000,
-    coverUrl: 'https://placehold.co/128x128/3F51B5/FFFFFF.png',
-    audioUrl: '/audio/sample-2.mp3',
-    tags: ['chillwave', 'lo-fi', 'relax'],
-    explicit: false,
-    releaseDate: '2022-11-10',
-    provider: 'Spotify',
-    recommendations: [
-      { songId: 'song-004', score: 0.92, reasonShort: 'Relaxing tones' },
-      { songId: 'song-005', score: 0.88, reasonShort: 'Popular in chillwave' },
-    ],
-  },
-  {
-    id: 'song-003',
-    title: 'City Lights at 3 AM',
-    artists: ['Neon Drive'],
-    album: 'Metropolis',
-    durationMs: 180000,
-    coverUrl: 'https://placehold.co/128x128/9C27B0/FFFFFF.png',
-    audioUrl: '/audio/sample-3.mp3',
-    tags: ['synthwave', '80s', 'energetic'],
-    explicit: false,
-    releaseDate: '2024-01-15',
-    provider: 'SoundCloud',
-    recommendations: [
-      { songId: 'song-006', score: 0.89, reasonShort: 'Classic synth sound' },
-      { songId: 'song-001', score: 0.82, reasonShort: 'Electronic beats' },
-    ],
-  },
-  {
-    id: 'song-004',
-    title: 'Forest Lullaby',
-    artists: ['Whispering Pines'],
-    album: 'Earthen',
-    durationMs: 280000,
-    coverUrl: 'https://placehold.co/128x128/4CAF50/FFFFFF.png',
-    audioUrl: '/audio/sample-1.mp3',
-    tags: ['acoustic', 'folk', 'calm'],
-    explicit: false,
-    releaseDate: '2023-09-01',
-    provider: 'Apple Music',
-    recommendations: [
-      { songId: 'song-007', score: 0.95, reasonShort: 'Gentle folk melodies' },
-      { songId: 'song-002', score: 0.81, reasonShort: 'Relaxing atmosphere' },
-    ],
-  },
-  {
-    id: 'song-005',
-    title: 'The Getaway',
-    artists: ['Road Trip Heroes'],
-    album: 'Open Road',
-    durationMs: 220000,
-    coverUrl: 'https://placehold.co/128x128/FF9800/FFFFFF.png',
-    audioUrl: '/audio/sample-2.mp3',
-    tags: ['indie rock', 'upbeat', 'driving'],
-    explicit: false,
-    releaseDate: '2021-06-30',
-    provider: 'Bandcamp',
-    recommendations: [
-      { songId: 'song-008', score: 0.91, reasonShort: 'High-energy rock' },
-      { songId: 'song-009', score: 0.87, reasonShort: 'Similar artists' },
-    ],
-  },
-  {
-    id: 'song-006',
-    title: 'Quantum Leap',
-    artists: ['Chrono Rider'],
-    album: 'Timelines',
-    durationMs: 260000,
-    coverUrl: 'https://placehold.co/128x128/F44336/FFFFFF.png',
-    audioUrl: '/audio/sample-3.mp3',
-    tags: ['electronic', 'trance', 'futuristic'],
-    explicit: false,
-    releaseDate: '2024-02-28',
-    provider: 'Beatport',
-    recommendations: [
-      { songId: 'song-001', score: 0.93, reasonShort: 'Energetic electronic' },
-      { songId: 'song-003', score: 0.84, reasonShort: 'Synth-heavy' },
-    ],
-  },
-  {
-    id: 'song-007',
-    title: 'Riverstone',
-    artists: ['The Creek Beds'],
-    album: 'Water & Stone',
-    durationMs: 195000,
-    coverUrl: 'https://placehold.co/128x128/00BCD4/FFFFFF.png',
-    audioUrl: '/audio/sample-1.mp3',
-    tags: ['folk', 'americana', 'storytelling'],
-    explicit: false,
-    releaseDate: '2022-08-19',
-    provider: 'Spotify',
-    recommendations: [
-      { songId: 'song-004', score: 0.94, reasonShort: 'Organic sound' },
-      { songId: 'song-010', score: 0.86, reasonShort: 'Acoustic storytelling' },
-    ],
-  },
-  {
-    id: 'song-008',
-    title: 'Rooftop Concert',
-    artists: ['The Urban Legends'],
-    album: 'Live from Downtown',
-    durationMs: 310000,
-    coverUrl: 'https://placehold.co/128x128/673AB7/FFFFFF.png',
-    audioUrl: '/audio/sample-2.mp3',
-    tags: ['indie rock', 'live', 'raw'],
-    explicit: true,
-    releaseDate: '2023-12-01',
-    provider: 'YouTube',
-    recommendations: [
-      { songId: 'song-005', score: 0.9, reasonShort: 'Upbeat indie' },
-      { songId: 'song-009', score: 0.85, reasonShort: 'Garage rock feel' },
-    ],
-  },
-  {
-    id: 'song-009',
-    title: 'Static Dreams',
-    artists: ['Glitch Mob'],
-    album: 'Digital Dust',
-    durationMs: 230000,
-    coverUrl: 'https://placehold.co/128x128/795548/FFFFFF.png',
-    audioUrl: '/audio/sample-3.mp3',
-    tags: ['glitch-hop', 'bass', 'experimental'],
-    explicit: false,
-    releaseDate: '2020-04-22',
-    provider: 'SoundCloud',
-    recommendations: [
-      { songId: 'song-006', score: 0.88, reasonShort: 'Experimental electronic' },
-      { songId: 'song-011', score: 0.83, reasonShort: 'Heavy basslines' },
-    ],
-  },
-  {
-    id: 'song-010',
-    title: 'Campfire Stories',
-    artists: ['Lost & Found'],
-    album: 'The Long Road Home',
-    durationMs: 205000,
-    coverUrl: 'https://placehold.co/128x128/FF5722/FFFFFF.png',
-    audioUrl: '/audio/sample-1.mp3',
-    tags: ['singer-songwriter', 'acoustic', 'intimate'],
-    explicit: false,
-    releaseDate: '2023-10-05',
-    provider: 'Bandcamp',
-    recommendations: [
-      { songId: 'song-007', score: 0.96, reasonShort: 'Intimate acoustics' },
-      { songId: 'song-004', score: 0.9, reasonShort: 'Calm and narrative' },
-    ],
-  },
-  {
-    id: 'song-011',
-    title: 'Midnight Groove',
-    artists: ['Funk Phantoms'],
-    album: 'Night Moves',
-    durationMs: 275000,
-    coverUrl: 'https://placehold.co/128x128/607D8B/FFFFFF.png',
-    audioUrl: '/audio/sample-2.mp3',
-    tags: ['funk', 'soul', 'groovy'],
-    explicit: false,
-    releaseDate: '2022-03-18',
-    provider: 'Spotify',
-    recommendations: [
-      { songId: 'song-012', score: 0.91, reasonShort: 'Pure funk' },
-      { songId: 'song-009', score: 0.8, reasonShort: 'Groovy bass' },
-    ],
-  },
-  {
-    id: 'song-012',
-    title: 'Sunrise over the Mesa',
-    artists: ['Desert Bloom'],
-    album: 'Canyon Echoes',
-    durationMs: 320000,
-    coverUrl: 'https://placehold.co/128x128/E91E63/FFFFFF.png',
-    audioUrl: '/audio/sample-3.mp3',
-    tags: ['ambient', 'instrumental', 'cinematic'],
-    explicit: false,
-    releaseDate: '2023-07-21',
-    provider: 'Apple Music',
-    recommendations: [
-      { songId: 'song-001', score: 0.89, reasonShort: 'Cinematic soundscapes' },
-      { songId: 'song-002', score: 0.85, reasonShort: 'Expansive ambient tracks' },
-    ],
-  },
-];
+let songs: Song[] | null = null;
 
-export function getSongs() {
+function parseSongs(): Song[] {
+  try {
+    const csvPath = path.join(process.cwd(), 'src', 'data', 'songs.csv');
+    const csvData = fs.readFileSync(csvPath, 'utf-8');
+    const lines = csvData.split('\n').slice(1); // Skip header row
+
+    return lines.map((line) => {
+      // This simple parser assumes no commas within fields.
+      // For more complex CSVs, a dedicated library would be better.
+      const [
+        id,
+        title,
+        artists,
+        album,
+        durationMs,
+        coverUrl,
+        audioUrl,
+        tags,
+        explicit,
+        releaseDate,
+        provider,
+        recommendationsRaw,
+      ] = line.split(',');
+
+      // Skip empty lines
+      if (!id) {
+        return null;
+      }
+
+      return {
+        id,
+        title: title?.trim() || 'Unknown Title',
+        artists: artists?.split(';').map(a => a.trim()) || ['Unknown Artist'],
+        album: album?.trim() || 'Unknown Album',
+        durationMs: parseInt(durationMs, 10) || 0,
+        coverUrl: coverUrl?.trim() || 'https://placehold.co/128x128/1A237E/FFFFFF.png',
+        audioUrl: audioUrl?.trim() || '',
+        tags: tags?.split(';').map(t => t.trim()) || [],
+        explicit: explicit?.toLowerCase() === 'true',
+        releaseDate: releaseDate?.trim() || '',
+        provider: provider?.trim() || 'Unknown',
+        recommendations: recommendationsRaw?.split(';').filter(r => r).map(r => {
+          const [songId, score, reasonShort] = r.split(':');
+          return {
+            songId,
+            score: parseFloat(score) || 0,
+            reasonShort: reasonShort || 'Similar vibe'
+          };
+        }) || [],
+      };
+    }).filter((song): song is Song => song !== null);
+
+  } catch (error) {
+    console.error("Could not read or parse songs.csv:", error);
+    // Fallback to an empty array if the file doesn't exist or is invalid
+    return [];
+  }
+}
+
+// This function runs on the server and is safe to use fs
+export function getSongs(): Song[] {
+  if (songs === null) {
+    songs = parseSongs();
+  }
   return songs;
 }
 
-export function getSongById(id: string) {
+// This function can be called from client or server, but relies on getSongs having been called first
+// and the songs data being cached.
+export function getSongById(id: string): Song | undefined {
+  if (songs === null) {
+    // This is a workaround for client-side access. In a real app,
+    // you'd likely have an API endpoint or have all songs in a client-side store.
+    console.warn('getSongById called before songs were initialized on the server.');
+    return undefined;
+  }
   return songs.find((song) => song.id === id);
 }
-
-// Add more songs to reach the desired count, this is a sample.
-export default songs;

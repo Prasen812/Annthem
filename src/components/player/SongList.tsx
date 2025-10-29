@@ -1,11 +1,13 @@
 'use client';
 
-import { usePlayer } from '@/providers/PlayerProvider';
+import type { Song } from '@/types';
 import { SongCard } from './SongCard';
 
-export function SongList() {
-  const { songs } = usePlayer();
+interface SongListProps {
+  songs: Song[];
+}
 
+export function SongList({ songs }: SongListProps) {
   if (songs.length === 0) {
     return <div className="mt-4 text-neutral-400">No songs available.</div>;
   }

@@ -10,7 +10,7 @@ import React, {
   useEffect,
 } from 'react';
 import type { Song, QueueItem } from '@/types';
-import allSongs, { getSongById } from '@/data/songs';
+import { getSongById } from '@/data/songs';
 
 interface PlayerState {
   songs: Song[];
@@ -67,6 +67,11 @@ const PlayerContext = createContext<{
 const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState => {
   switch (action.type) {
     case 'LOAD_SONGS':
+      // This logic ensures we don't wipe the songs array if it's already populated.
+      // And initializes the player with the full list of songs.
+      if (state.songs.length > 0) {
+        return state;
+      }
       return { ...state, songs: action.payload };
 
     case 'PLAY_PAUSE':
@@ -285,9 +290,10 @@ export const usePlayer = () => {
   const { state, dispatch, ...rest } = context;
 
   const expandAndPlayRecommendations = (song: Song) => {
-    const recommendations = song.recommendations
+    const songWithRecs = getSongById(song.id);
+    const recommendations = songWithRecs?.recommendations
         .map(r => getSongById(r.songId))
-        .filter((s): s is Song => !!s);
+        .filter((s): s is Song => !!s) || [];
     dispatch({ type: 'SET_EXPANDED_SONG', payload: { songId: song.id, recommendations } });
   };
   
@@ -296,7 +302,7 @@ export const usePlayer = () => {
   const playPrev = () => dispatch({ type: 'PLAY_PREV' });
   const toggleShuffle = () => dispatch({ type: 'TOGGLE_SHUFFLE' });
   const toggleFullScreen = () => dispatch({ type: 'TOGGLE_FULLSCREEN' });
-  const loadSongs = (songs: Song[]) => dispatch({ type: 'LOAD_SONGS', payload: songs});
+  const loadSongs = useCallback((songs: Song[]) => dispatch({ type: 'LOAD_SONGS', payload: songs}), [dispatch]);
 
   return {
     ...state,

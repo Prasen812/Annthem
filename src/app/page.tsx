@@ -1,8 +1,11 @@
+
 import { HomeIcon, Search, Library, Plus, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SongList } from '@/components/player/SongList';
 import { CascadePlayer } from '@/components/player/CascadePlayer';
 import Image from 'next/image';
+import { getSongs } from '@/data/songs';
+import type { Song } from '@/types';
 
 const popularArtists = [
   { name: 'Galaxy Runners', image: 'https://placehold.co/150x150/1A237E/FFFFFF.png' },
@@ -14,6 +17,7 @@ const popularArtists = [
 ];
 
 export default function Home() {
+  const songs: Song[] = getSongs();
   return (
     <div className="h-full">
       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-2 h-[calc(100%-80px)]">
@@ -30,7 +34,7 @@ export default function Home() {
               </button>
             </div>
             <div className="flex flex-col gap-y-2 mt-4 px-3 h-[calc(100vh-270px)] overflow-y-auto">
-              <SongList />
+              <SongList songs={songs} />
             </div>
           </div>
         </div>
@@ -104,7 +108,7 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <CascadePlayer />
+      <CascadePlayer songs={songs} />
     </div>
   );
 }
