@@ -7,25 +7,39 @@ import { getSongs } from '@/data/songs';
 import type { Song } from '@/types';
 import { SongCoverPlaceholder } from '@/components/player/SongCoverPlaceholder';
 
-const popularArtists = [
-  { name: 'Galaxy Runners', image: 'https://placehold.co/150x150/1A237E/FFFFFF.png' },
-  { name: 'Tidal Waves', image: 'https://placehold.co/150x150/3F51B5/FFFFFF.png' },
-  { name: 'Neon Drive', image: 'https://placehold.co/150x150/9C27B0/FFFFFF.png' },
-  { name: 'Whispering Pines', image: 'https://placehold.co/150x150/4CAF50/FFFFFF.png' },
-  { name: 'Road Trip Heroes', image: 'https://placehold.co/150x150/FF9800/FFFFFF.png' },
-  { name: 'Chrono Rider', image: 'https://placehold.co/150x150/F44336/FFFFFF.png' },
-];
+type Artist = {
+  name: string;
+  image: string;
+};
 
 export default function Home() {
   const songs: Song[] = getSongs();
-  const trendingSongs = songs.slice(0, 5);
+  const trendingSongs = songs.slice(0, 12);
+
+  // Create a dynamic list of popular artists from the songs data
+  const artistCountMap = new Map<string, number>();
+  songs.forEach(song => {
+    song.artists.forEach(artistName => {
+      artistCountMap.set(artistName, (artistCountMap.get(artistName) || 0) + 1);
+    });
+  });
+
+  const popularArtists: Artist[] = Array.from(artistCountMap.entries())
+    .sort(([, countA], [, countB]) => countB - countA)
+    .slice(0, 12)
+    .map(([name], index) => ({
+      name,
+      // Use a deterministic placeholder image for each artist
+      image: `https://picsum.photos/seed/${name.replace(/\s/g, '')}${index}/150/150`,
+    }));
+
 
   return (
     <div className="h-full">
       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-2 h-[calc(100%-80px)]">
         {/* Left Sidebar */}
         <div className="hidden md:flex flex-col gap-2 bg-black h-full">
-          <div className="bg-neutral-900 rounded-lg p-4 flex flex-col gap-y-4">
+          <div className="bg-neutral-900 rounded-lg p-4 flex flex-col gap-y-4 h-full">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-x-4">
                 <Library className="text-neutral-400" />
@@ -35,7 +49,7 @@ export default function Home() {
                 <Plus />
               </button>
             </div>
-            <div className="flex flex-col gap-y-2 mt-4 px-3 h-[calc(100vh-270px)] overflow-y-auto">
+            <div className="flex flex-col gap-y-2 mt-4 px-3 flex-1 overflow-y-auto">
               <SongList songs={songs} />
             </div>
           </div>
@@ -45,7 +59,7 @@ export default function Home() {
         <div className="bg-neutral-900 rounded-lg h-full w-full overflow-hidden overflow-y-auto">
           <div className="p-6">
             <h2 className="text-2xl font-bold mb-4">Trending Songs</h2>
-             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {trendingSongs.map((song) => (
                  <div key={song.id} className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
                    <div className="relative aspect-square w-full h-full rounded-md overflow-hidden mb-4">
@@ -64,7 +78,7 @@ export default function Home() {
              </div>
 
             <h2 className="text-2xl font-bold my-4">Popular Artists</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {popularArtists.map((artist) => (
                 <div key={artist.name} className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
                   <div className="relative aspect-square w-full h-full rounded-full overflow-hidden mb-2">
