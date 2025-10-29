@@ -10,7 +10,16 @@ import React, {
   useEffect,
 } from 'react';
 import type { Song, QueueItem } from '@/types';
-import { getSongById } from '@/data/songs';
+
+// This utility function is now defined inside the provider module
+// to ensure it's only part of the client-side bundle.
+const getSongById = (id: string, allSongs: Song[]): Song | undefined => {
+  if (!allSongs || allSongs.length === 0) {
+    return undefined;
+  }
+  return allSongs.find((song) => song.id === id);
+};
+
 
 interface PlayerState {
   songs: Song[];
@@ -37,7 +46,7 @@ type PlayerAction =
   | { type: 'HANDLE_TRACK_END' }
   | { type: 'SET_QUEUE'; payload: QueueItem[] }
   | { type: 'ADD_TO_QUEUE'; payload: QueueItem }
-  | { type: 'SET_EXPANDED_SONG'; payload: { songId: string | null; recommendations: Song[] } }
+  | { type: 'SET_EXPANDED_SONG'; payload: { song: Song; recommendations: Song[] } }
   | { type: 'TOGGLE_SHUFFLE' }
   | { type: 'TOGGLE_FULLSCREEN' }
   | { type: 'UPDATE_TIME'; payload: { currentTime: number; duration: number } };
@@ -101,13 +110,13 @@ const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState =>
     }
 
     case 'SET_EXPANDED_SONG': {
-      const { songId, recommendations } = action.payload;
-      if (!songId) {
+      const { song, recommendations } = action.payload;
+      if (!song) {
         return { ...state, expandedSongId: null };
       }
 
       // If already expanded, just return
-      if (state.expandedSongId === songId) return state;
+      if (state.expandedSongId === song.id) return state;
 
       const recQueueItems: QueueItem[] = recommendations
         .map((recSong) => {
@@ -117,28 +126,28 @@ const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState =>
             song: recSong,
             source: 'recommendation',
             addedAt: Date.now(),
-            originTrackId: songId,
+            originTrackId: song.id,
           };
         })
         .filter((item): item is QueueItem => item !== null);
 
       if (recQueueItems.length === 0) {
-        const currentSongInQueue = state.queue.find(q => q.song.id === songId);
+        const currentSongInQueue = state.queue.find(q => q.song.id === song.id);
         if (!currentSongInQueue) {
-             const songToAdd = state.songs.find(s => s.id === songId);
+             const songToAdd = state.songs.find(s => s.id === song.id);
              if (songToAdd) {
                 const newItem: QueueItem = { id: `queue-${songToAdd.id}-${Date.now()}`, song: songToAdd, source: 'mainList', addedAt: Date.now() };
                 const newQueue = [...state.queue, newItem];
-                return { ...state, expandedSongId: songId, queue: newQueue, currentIndex: newQueue.length -1, isPlaying: true };
+                return { ...state, expandedSongId: song.id, queue: newQueue, currentIndex: newQueue.length -1, isPlaying: true };
              }
         }
-        return { ...state, expandedSongId: songId, isPlaying: state.queue.length > 0 };
+        return { ...state, expandedSongId: song.id, isPlaying: state.queue.length > 0 };
       }
       
       const insertionIndex = state.currentIndex + 1;
       const newQueue = [...state.queue.slice(0, insertionIndex), ...recQueueItems, ...state.queue.slice(insertionIndex)];
       
-      return { ...state, expandedSongId: songId, queue: newQueue, currentIndex: insertionIndex, isPlaying: true };
+      return { ...state, expandedSongId: song.id, queue: newQueue, currentIndex: insertionIndex, isPlaying: true };
     }
     
     case 'HANDLE_TRACK_END': {
@@ -290,11 +299,11 @@ export const usePlayer = () => {
   const { state, dispatch, ...rest } = context;
 
   const expandAndPlayRecommendations = (song: Song) => {
-    const songWithRecs = getSongById(song.id);
+    const songWithRecs = getSongById(song.id, state.songs);
     const recommendations = songWithRecs?.recommendations
-        .map(r => getSongById(r.songId))
+        .map(r => getSongById(r.songId, state.songs))
         .filter((s): s is Song => !!s) || [];
-    dispatch({ type: 'SET_EXPANDED_SONG', payload: { songId: song.id, recommendations } });
+    dispatch({ type: 'SET_EXPANDED_SONG', payload: { song, recommendations } });
   };
   
   const playPause = () => dispatch({ type: 'PLAY_PAUSE' });

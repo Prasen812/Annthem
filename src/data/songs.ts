@@ -65,20 +65,10 @@ function parseSongs(): Song[] {
 
 // This function runs on the server and is safe to use fs
 export function getSongs(): Song[] {
+  // We cache the songs in memory for performance during development.
+  // In production with a real database, this would be a direct query.
   if (songs === null) {
     songs = parseSongs();
   }
   return songs;
-}
-
-// This function can be called from client or server, but relies on getSongs having been called first
-// and the songs data being cached.
-export function getSongById(id: string): Song | undefined {
-  if (songs === null) {
-    // This is a workaround for client-side access. In a real app,
-    // you'd likely have an API endpoint or have all songs in a client-side store.
-    console.warn('getSongById called before songs were initialized on the server.');
-    return undefined;
-  }
-  return songs.find((song) => song.id === id);
 }

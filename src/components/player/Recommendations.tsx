@@ -1,19 +1,28 @@
 'use client';
 import type { Song } from '@/types';
 import Image from 'next/image';
-import { getSongById } from '@/data/songs';
 import { usePlayer } from '@/providers/PlayerProvider';
 import { Music, Volume2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// This utility function is now defined locally inside the modules that need it,
+// to ensure it's only part of the client-side bundle.
+const getSongById = (id: string, allSongs: Song[]): Song | undefined => {
+  if (!allSongs || allSongs.length === 0) {
+    return undefined;
+  }
+  return allSongs.find((song) => song.id === id);
+};
+
 
 interface RecommendationsProps {
   song: Song;
 }
 
 export function Recommendations({ song }: RecommendationsProps) {
-  const { activeSong, isPlaying } = usePlayer();
+  const { activeSong, isPlaying, songs: allSongs } = usePlayer();
   const recommendedSongs = song.recommendations
-    .map((r) => getSongById(r.songId))
+    .map((r) => getSongById(r.songId, allSongs))
     .filter((s): s is Song => !!s);
 
   if (recommendedSongs.length === 0) {
