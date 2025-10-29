@@ -5,38 +5,61 @@ import path from 'path';
 
 let songs: Song[] | null = null;
 
+// This is a more robust CSV parser that handles quoted fields.
 function robustCsvParse(csvData: string): string[][] {
-    const rows = [];
-    let insideQuote = false;
-    let record = '';
-    
-    // Normalize line endings
-    const normalizedData = csvData.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const rows = [];
+  let currentRow = [];
+  let currentField = '';
+  let inQuotedField = false;
 
-    for (let i = 0; i < normalizedData.length; i++) {
-        const char = normalizedData[i];
-        if (char === '"' && i + 1 < normalizedData.length && normalizedData[i+1] === '"') {
-            // Handle escaped quote
-            record += '"';
-            i++; 
-        } else if (char === '"') {
-            insideQuote = !insideQuote;
-        } else if ((char === '\n') && !insideQuote) {
-            if (record) {
-                 const values = record.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                 rows.push(values.map(v => v.trim().replace(/^"|"$/g, '').replace(/""/g, '"')));
-            }
-            record = '';
+  for (let i = 0; i < csvData.length; i++) {
+    const char = csvData[i];
+
+    if (inQuotedField) {
+      if (char === '"') {
+        if (i + 1 < csvData.length && csvData[i + 1] === '"') {
+          // Handle escaped quote
+          currentField += '"';
+          i++;
         } else {
-            record += char;
+          inQuotedField = false;
         }
+      } else {
+        currentField += char;
+      }
+    } else {
+      if (char === '"') {
+        inQuotedField = true;
+      } else if (char === ',') {
+        currentRow.push(currentField);
+        currentField = '';
+      } else if (char === '\n' || char === '\r') {
+        if (i > 0 && csvData[i - 1] !== '\n' && csvData[i - 1] !== '\r') {
+           currentRow.push(currentField);
+           rows.push(currentRow);
+           currentRow = [];
+           currentField = '';
+        }
+        if (char === '\r' && csvData[i+1] === '\n') {
+           i++; // Handle CRLF line endings
+        }
+      } else {
+        currentField += char;
+      }
     }
-    if (record) {
-        const values = record.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-        rows.push(values.map(v => v.trim().replace(/^"|"$/g, '').replace(/""/g, '"')));
-    }
-    return rows;
+  }
+
+  // Add the last field and row if the file doesn't end with a newline
+  if (currentField) {
+    currentRow.push(currentField);
+  }
+  if (currentRow.length > 0) {
+    rows.push(currentRow);
+  }
+
+  return rows;
 }
+
 
 function parseSongs(): Song[] {
   try {
@@ -49,12 +72,12 @@ function parseSongs(): Song[] {
     const header = records[0].map(h => h.trim());
     const lines = records.slice(1);
     
-    const requiredColumns = ['id', 'title', 'artists'];
     const colIndices: { [key: string]: number } = {};
     header.forEach((h, i) => {
         colIndices[h] = i;
     });
 
+    const requiredColumns = ['track_name', 'artist(s)_name'];
     if (requiredColumns.some(col => colIndices[col] === undefined)) {
         console.error("CSV is missing one of the required columns:", requiredColumns);
         return [];
@@ -63,35 +86,27 @@ function parseSongs(): Song[] {
     return lines.map((line, index) => {
       if (line.length < header.length) return null;
 
-      const id = line[colIndices['id']];
-      const title = line[colIndices['title']];
-      const artists = line[colIndices['artists']]?.split(';').map(a => a.trim()).filter(a => a) || ['Unknown Artist'];
-
-      if (!id || !title || artists.length === 0) {
-        console.warn(`Skipping row ${index + 2} due to missing id, title, or artists`);
+      const title = line[colIndices['track_name']];
+      const artists = line[colIndices['artist(s)_name']]?.split(',').map(a => a.trim()).filter(a => a) || ['Unknown Artist'];
+      
+      if (!title || artists.length === 0) {
+        console.warn(`Skipping row ${index + 2} due to missing track_name or artist(s)_name`);
         return null;
       }
       
       const songData: Song = {
-        id,
+        id: `${title}-${index}`, // Create a unique ID
         title,
         artists,
-        album: line[colIndices['album']] || 'Unknown Album',
-        durationMs: parseInt(line[colIndices['durationMs']], 10) || 180000,
-        coverUrl: line[colIndices['coverUrl']] || `https://placehold.co/128x128?text=${encodeURIComponent(title)}`,
-        audioUrl: line[colIndices['audioUrl']] || '',
-        tags: line[colIndices['tags']]?.split(';').map(t => t.trim()).filter(t => t) || [],
-        explicit: line[colIndices['explicit']]?.toLowerCase() === 'true',
-        releaseDate: line[colIndices['releaseDate']] || '',
-        provider: line[colIndices['provider']] || 'Unknown',
-        recommendations: line[colIndices['recommendations']]?.split(';').filter(r => r).map(r => {
-          const [songId, score, reasonShort] = r.split(':');
-          return {
-            songId,
-            score: parseFloat(score) || 0,
-            reasonShort: reasonShort || 'Similar vibe'
-          };
-        }) || [],
+        album: 'Unknown Album',
+        durationMs: 180000, // Placeholder duration
+        coverUrl: `https://placehold.co/128x128?text=${encodeURIComponent(title)}`, // Placeholder image
+        audioUrl: '', // Placeholder audio
+        tags: [],
+        explicit: false,
+        releaseDate: '',
+        provider: 'CSV',
+        recommendations: [],
       };
       
       return songData;
