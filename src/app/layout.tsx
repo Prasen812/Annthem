@@ -3,7 +3,6 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { PlayerProvider } from '@/providers/PlayerProvider';
 import { AppHeader } from '@/components/AppHeader';
-import { AppFooter } from '@/components/AppFooter';
 
 export const metadata: Metadata = {
   title: 'Cascade Player',
@@ -30,7 +29,6 @@ export default function RootLayout({
           <div className="relative flex min-h-screen flex-col">
             <AppHeader />
             <main className="flex-1 p-2 h-full">{children}</main>
-            <AppFooter />
           </div>
           <Toaster />
         </PlayerProvider>
