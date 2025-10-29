@@ -16,11 +16,9 @@ function robustCsvParse(csvData: string): string[][] {
         }
         if ((char === '\n' || char === '\r') && !insideQuote) {
             if (csvData[i + 1] === '\n' || csvData[i + 1] === '\r') {
-                // handle CRLF
                 i++;
             }
             if (record) {
-                // Simplified split logic assuming quotes are balanced
                 const values = record.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 rows.push(values.map(v => v.trim().replace(/^"|"$/g, '')));
             }
@@ -29,7 +27,7 @@ function robustCsvParse(csvData: string): string[][] {
         }
         record += char;
     }
-    if (record) { // push the last record
+    if (record) {
         const values = record.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
         rows.push(values.map(v => v.trim().replace(/^"|"$/g, '')));
     }
@@ -43,39 +41,46 @@ function parseSongs(): Song[] {
     const csvData = fs.readFileSync(csvPath, 'utf-8');
     const records = robustCsvParse(csvData);
     
-    // Assuming first row is header
     if (records.length < 2) return [];
     const header = records[0].map(h => h.trim());
     const lines = records.slice(1);
     
-    const requiredColumns = ['id', 'title', 'artists', 'coverUrl', 'audioUrl'];
-    const colIndices = Object.fromEntries(requiredColumns.map(col => [col, header.indexOf(col)]));
+    const requiredColumns = ['id', 'title', 'artists'];
+    const colIndices: { [key: string]: number } = {};
+    header.forEach((h, i) => {
+        colIndices[h] = i;
+    });
 
-    if (requiredColumns.some(col => colIndices[col] === -1)) {
+    if (requiredColumns.some(col => colIndices[col] === undefined)) {
         console.error("CSV is missing one of the required columns:", requiredColumns);
         return [];
     }
 
-
-    return lines.map((line) => {
+    return lines.map((line, index) => {
       if (line.length < header.length) return null;
 
+      const id = line[colIndices['id']];
+      const title = line[colIndices['title']];
       const artists = line[colIndices['artists']]?.split(';').map(a => a.trim()) || ['Unknown Artist'];
-      const title = line[colIndices['title']] || 'Unknown Title';
+
+      if (!id || !title) {
+        console.warn(`Skipping row ${index + 2} due to missing id or title`);
+        return null;
+      }
       
-      const songData = {
-        id: line[colIndices['id']],
+      const songData: Song = {
+        id: id,
         title: title,
         artists: artists,
-        album: line[header.indexOf('album')] || 'Unknown Album',
-        durationMs: parseInt(line[header.indexOf('durationMs')], 10) || 0,
-        coverUrl: line[colIndices['coverUrl']] || 'https://placehold.co/128x128/1A237E/FFFFFF.png',
+        album: line[colIndices['album']] || 'Unknown Album',
+        durationMs: parseInt(line[colIndices['durationMs']], 10) || 180000,
+        coverUrl: line[colIndices['coverUrl']] || `https://placehold.co/128x128?text=${encodeURIComponent(title)}`,
         audioUrl: line[colIndices['audioUrl']] || '',
-        tags: line[header.indexOf('tags')]?.split(';').map(t => t.trim()) || [],
-        explicit: line[header.indexOf('explicit')]?.toLowerCase() === 'true',
-        releaseDate: line[header.indexOf('releaseDate')] || '',
-        provider: line[header.indexOf('provider')] || 'Unknown',
-        recommendations: line[header.indexOf('recommendations')]?.split(';').filter(r => r).map(r => {
+        tags: line[colIndices['tags']]?.split(';').map(t => t.trim()) || [],
+        explicit: line[colIndices['explicit']]?.toLowerCase() === 'true',
+        releaseDate: line[colIndices['releaseDate']] || '',
+        provider: line[colIndices['provider']] || 'Unknown',
+        recommendations: line[colIndices['recommendations']]?.split(';').filter(r => r).map(r => {
           const [songId, score, reasonShort] = r.split(':');
           return {
             songId,
@@ -85,22 +90,16 @@ function parseSongs(): Song[] {
         }) || [],
       };
       
-      if (!songData.id) return null;
-
       return songData;
     }).filter((song): song is Song => song !== null);
 
   } catch (error) {
     console.error("Could not read or parse songs.csv:", error);
-    // Fallback to an empty array if the file doesn't exist or is invalid
     return [];
   }
 }
 
-// This function runs on the server and is safe to use fs
 export function getSongs(): Song[] {
-  // We cache the songs in memory for performance during development.
-  // In a real database, this would be a direct query.
   if (songs === null) {
     songs = parseSongs();
   }
