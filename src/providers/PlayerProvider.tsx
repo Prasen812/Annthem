@@ -82,12 +82,6 @@ const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState =>
 
     case 'PLAY_PAUSE': {
       if (state.queue.length === 0) return state;
-      const activeSong = state.queue[state.currentIndex]?.song;
-      const isSpotify = activeSong?.audioUrl?.includes('spotify');
-      // For spotify embeds, we can't control play/pause, so we just toggle our internal state
-      if (isSpotify) {
-        return { ...state, isPlaying: !state.isPlaying };
-      }
       return { ...state, isPlaying: !state.isPlaying };
     }
     
@@ -246,35 +240,30 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const activeSong = state.queue[state.currentIndex]?.song;
-  const isSpotifyEmbed = activeSong?.audioUrl?.includes('spotify.com') ?? false;
+  const isSpotifyEmbed = activeSong?.provider === 'Spotify';
 
   useEffect(() => {
-    if (isSpotifyEmbed) {
-      if (audioRef.current) audioRef.current.pause();
-      return;
+    if (isSpotifyEmbed || !audioRef.current) {
+        return;
     }
-    if (audioRef.current) {
-        state.isPlaying ? audioRef.current.play().catch(e => console.error("Playback error:", e)) : audioRef.current.pause();
-    }
+    state.isPlaying ? audioRef.current.play().catch(e => console.error("Playback error:", e)) : audioRef.current.pause();
   }, [state.isPlaying, activeSong, isSpotifyEmbed]);
 
   useEffect(() => {
-    if (isSpotifyEmbed) return;
-    if (audioRef.current && activeSong) {
-        if (audioRef.current.src !== activeSong.audioUrl) {
-          audioRef.current.src = activeSong.audioUrl;
-        }
-        if(state.isPlaying) {
-            audioRef.current.play().catch(e => console.error("Playback error on song change:", e));
-        }
+    if (isSpotifyEmbed || !audioRef.current || !activeSong) {
+        return;
+    }
+    if (audioRef.current.src !== activeSong.audioUrl) {
+      audioRef.current.src = activeSong.audioUrl;
+    }
+    if(state.isPlaying) {
+        audioRef.current.play().catch(e => console.error("Playback error on song change:", e));
     }
   }, [activeSong, state.isPlaying, isSpotifyEmbed]);
   
   const handleTimeUpdate = () => {
-      if (isSpotifyEmbed) return;
-      if (audioRef.current) {
-          dispatch({ type: 'UPDATE_TIME', payload: { currentTime: audioRef.current.currentTime, duration: audioRef.current.duration }});
-      }
+      if (isSpotifyEmbed || !audioRef.current) return;
+      dispatch({ type: 'UPDATE_TIME', payload: { currentTime: audioRef.current.currentTime, duration: audioRef.current.duration }});
   };
 
   const handleTrackEnd = () => {
@@ -283,10 +272,8 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
   };
   
   const seek = useCallback((time: number) => {
-    if (isSpotifyEmbed) return;
-    if (audioRef.current) {
-        audioRef.current.currentTime = time;
-    }
+    if (isSpotifyEmbed || !audioRef.current) return;
+    audioRef.current.currentTime = time;
   }, [isSpotifyEmbed]);
 
   return (
@@ -297,6 +284,7 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleTrackEnd}
         onLoadedMetadata={handleTimeUpdate}
+        src={!isSpotifyEmbed && activeSong ? activeSong.audioUrl : ''}
       />
     </PlayerContext.Provider>
   );
@@ -324,6 +312,8 @@ export const usePlayer = () => {
   const toggleShuffle = () => dispatch({ type: 'TOGGLE_SHUFFLE' });
   const toggleFullScreen = () => dispatch({ type: 'TOGGLE_FULLSCREEN' });
   const loadSongs = useCallback((songs: Song[]) => dispatch({ type: 'LOAD_SONGS', payload: songs}), [dispatch]);
+  const playSong = (song: Song) => dispatch({ type: 'PLAY_SONG', payload: { song } });
+
 
   return {
     ...state,
@@ -331,6 +321,7 @@ export const usePlayer = () => {
     activeSong: state.queue[state.currentIndex]?.song,
     expandAndPlayRecommendations,
     playPause,
+    playSong,
     playNext,
     playPrev,
     toggleShuffle,

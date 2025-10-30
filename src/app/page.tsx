@@ -58,40 +58,44 @@ export default function Home() {
 
         {/* Main Content */}
         <div className="col-span-1 md:col-span-1 overflow-y-auto">
-           <div className="bg-neutral-900 rounded-lg h-full w-full p-6">
-              <h2 className="text-2xl font-bold mb-4">Trending Songs</h2>
-               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {trendingSongs.map((song) => (
-                   <div key={song.id} className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
-                     <div className="relative aspect-square w-full h-full rounded-md overflow-hidden mb-4">
-                        {song.coverUrl ? (
-                          <Image className="object-cover" src={song.coverUrl} fill alt={song.album || 'Album Art'} data-ai-hint="album cover" />
-                        ) : (
-                          <SongCoverPlaceholder song={song} />
+           <div className="bg-neutral-900 rounded-lg h-full w-full">
+              <div className="min-h-screen p-6">
+                <h2 className="text-2xl font-bold mb-4">Trending Songs</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                  {trendingSongs.map((song) => (
+                    <div key={song.id} className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
+                      <div className="relative aspect-square w-full h-full rounded-md overflow-hidden mb-4">
+                          {song.coverUrl ? (
+                            <Image className="object-cover" src={song.coverUrl} fill alt={song.album || 'Album Art'} data-ai-hint="album cover" />
+                          ) : (
+                            <SongCoverPlaceholder song={song} />
+                          )}
+                      </div>
+                      <div className="flex flex-col items-start w-full gap-y-1">
+                        <p className="font-semibold truncate w-full text-base">{song.title}</p>
+                        {song.artists && song.artists.length > 0 && (
+                          <p className="text-neutral-400 text-sm pb-2 w-full truncate">By {song.artists.join(', ')}</p>
                         )}
-                     </div>
-                     <div className="flex flex-col items-start w-full gap-y-1">
-                       <p className="font-semibold truncate w-full text-base">{song.title}</p>
-                       {song.artists && song.artists.length > 0 && (
-                        <p className="text-neutral-400 text-sm pb-2 w-full truncate">By {song.artists.join(', ')}</p>
-                       )}
-                     </div>
-                   </div>
-                ))}
-               </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-              <h2 className="text-2xl font-bold my-4">Popular Artists</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {popularArtists.map((artist) => (
-                  <div key={artist.name} className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
-                    <div className="relative aspect-square w-full h-full rounded-full overflow-hidden mb-2">
-                      <Image className="object-cover" src={artist.image} fill alt="Artist" data-ai-hint="artist portrait" />
+              <div className="min-h-screen p-6">
+                <h2 className="text-2xl font-bold my-4">Popular Artists</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                  {popularArtists.map((artist) => (
+                    <div key={artist.name} className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
+                      <div className="relative aspect-square w-full h-full rounded-full overflow-hidden mb-2">
+                        <Image className="object-cover" src={artist.image} fill alt="Artist" data-ai-hint="artist portrait" />
+                      </div>
+                      <div className="flex flex-col items-start w-full pt-2 gap-y-1">
+                        <p className="font-semibold truncate w-full text-center text-base">{artist.name}</p>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-start w-full pt-2 gap-y-1">
-                      <p className="font-semibold truncate w-full text-center text-base">{artist.name}</p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
         </div>

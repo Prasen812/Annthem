@@ -13,11 +13,15 @@ interface SongCardProps {
 }
 
 export function SongCard({ song }: SongCardProps) {
-  const { activeSong, isPlaying, expandAndPlayRecommendations } = usePlayer();
+  const { activeSong, isPlaying, playSong, playPause } = usePlayer();
   const isThisSongActive = activeSong?.id === song.id;
 
   const handlePlay = () => {
-    expandAndPlayRecommendations(song);
+    if (isThisSongActive) {
+      playPause();
+    } else {
+      playSong(song);
+    }
   };
 
   return (
@@ -39,7 +43,7 @@ export function SongCard({ song }: SongCardProps) {
         <p className={cn('truncate', isThisSongActive ? 'text-primary' : 'text-white')}>
           {song.title}
         </p>
-        {song.artists.length > 0 && (
+        {song.artists && song.artists.length > 0 && (
           <p className="text-neutral-400 text-sm truncate">{song.artists.join(', ')}</p>
         )}
       </div>
