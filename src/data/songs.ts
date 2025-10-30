@@ -76,7 +76,7 @@ function parseSongs(): Song[] {
         colIndices[h] = i;
     });
 
-    const requiredColumns = ['track_name', 'artist(s)_name'];
+    const requiredColumns = ['track_id', 'track_name', 'artist(s)_name'];
     if (requiredColumns.some(col => colIndices[col] === undefined)) {
         console.error("CSV is missing one of the required columns:", requiredColumns);
         return [];
@@ -85,16 +85,17 @@ function parseSongs(): Song[] {
     return lines.map((line, index) => {
       if (line.length < header.length) return null;
 
+      const id = line[colIndices['track_id']];
       const title = line[colIndices['track_name']];
       const artists = line[colIndices['artist(s)_name']]?.split(',').map(a => a.trim()).filter(a => a) || ['Unknown Artist'];
       
-      if (!title || artists.length === 0) {
-        console.warn(`Skipping row ${index + 2} due to missing track_name or artist(s)_name`);
+      if (!id || !title || artists.length === 0) {
+        console.warn(`Skipping row ${index + 2} due to missing id, track_name, or artist(s)_name`);
         return null;
       }
       
       const songData: Song = {
-        id: `${title.replace(/\s/g, '-')}-${index}`, // Create a unique ID
+        id,
         title,
         artists,
         album: 'Unknown Album',
