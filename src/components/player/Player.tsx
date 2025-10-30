@@ -113,23 +113,8 @@ export function Player() {
   const MiniPlayerBar = () => (
      <div className="container mx-auto px-4 h-full">
          <div className="flex items-center justify-between h-full">
-             <div className="flex items-center gap-4 w-1/4 min-w-0">
-                 <button onClick={toggleFullScreen} className="relative w-14 h-14 shrink-0 rounded-md overflow-hidden">
-                   {activeSong.coverUrl ? (
-                     <Image src={activeSong.coverUrl} alt={activeSong.album || ''} width={56} height={56} className="object-cover" data-ai-hint="album art" />
-                   ) : (
-                     <SongCoverPlaceholder song={activeSong} />
-                   )}
-                 </button>
-                 <div className="truncate">
-                     <p className="font-semibold truncate text-foreground">{activeSong.title}</p>
-                     {activeSong.artists.length > 0 && <p className="text-sm text-muted-foreground truncate">{activeSong.artists.join(', ')}</p>}
-                 </div>
-             </div>
-
-             <div className="flex flex-col items-center justify-center gap-2 w-1/2 h-full">
-                 {isSpotifyEmbed && activeSong.audioUrl ? (
-                  <div className="w-full h-full flex items-center justify-center">
+            {isSpotifyEmbed && activeSong.audioUrl ? (
+                <div className="w-full h-full flex items-center justify-center">
                     <iframe
                       src={activeSong.audioUrl}
                       width="100%"
@@ -139,58 +124,73 @@ export function Player() {
                       loading="lazy"
                       className="border-none"
                     ></iframe>
-                  </div>
-                 ) : (
-                  <>
-                    <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" onClick={toggleShuffle} className={cn(isShuffled && "text-primary")}>
-                            <Shuffle className="h-5 w-5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={playPrev}>
-                            <SkipBack className="h-5 w-5" />
-                        </Button>
-                        <Button variant="default" size="icon" className="h-12 w-12 rounded-full" onClick={playPause}>
-                            {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 fill-current" />}
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={playNext}>
-                            <SkipForward className="h-5 w-5" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                            {repeatMode === 'one' ? <Repeat1 className="h-5 w-5 text-primary" /> : <Repeat className="h-5 w-5" />}
-                        </Button>
+                </div>
+            ) : (
+                <>
+                    <div className="flex items-center gap-4 w-1/4 min-w-0">
+                        <button onClick={toggleFullScreen} className="relative w-14 h-14 shrink-0 rounded-md overflow-hidden">
+                          {activeSong.coverUrl ? (
+                            <Image src={activeSong.coverUrl} alt={activeSong.album || ''} width={56} height={56} className="object-cover" data-ai-hint="album art" />
+                          ) : (
+                            <SongCoverPlaceholder song={activeSong} />
+                          )}
+                        </button>
+                        <div className="truncate">
+                            <p className="font-semibold truncate text-foreground">{activeSong.title}</p>
+                            {activeSong.artists.length > 0 && <p className="text-sm text-muted-foreground truncate">{activeSong.artists.join(', ')}</p>}
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2 w-full max-w-xl">
-                        <span className="text-xs font-mono text-muted-foreground">{formatTime(currentTime)}</span>
-                        <Slider 
-                            value={[currentTime]}
-                            max={duration || 1}
-                            onValueChange={([val]) => seek(val)}
-                            className="w-full"
-                        />
-                        <span className="text-xs font-mono text-muted-foreground">{formatTime(duration || 0)}</span>
-                    </div>
-                  </>
-                 )}
-             </div>
 
-             <div className="flex items-center justify-end gap-2 w-1/4">
-                 <Sheet>
-                     <SheetTrigger asChild>
-                         <Button variant="ghost" size="icon">
-                             <ListMusic className="h-5 w-5" />
-                         </Button>
-                     </SheetTrigger>
-                     <SheetContent className="w-full max-w-md p-0 flex flex-col">
-                         <SheetHeader className="p-6 pb-2">
-                             <SheetTitle className="font-headline">Up Next</SheetTitle>
-                         </SheetHeader>
-                         <QueueView />
-                     </SheetContent>
-                 </Sheet>
-                 <Button variant="ghost" size="icon" onClick={toggleFullScreen}>
-                     <Maximize2 className="h-5 w-5" />
-                 </Button>
-             </div>
+                    <div className="flex flex-col items-center justify-center gap-2 w-1/2 h-full">
+                        <div className="flex items-center gap-4">
+                            <Button variant="ghost" size="icon" onClick={toggleShuffle} className={cn(isShuffled && "text-primary")}>
+                                <Shuffle className="h-5 w-5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={playPrev}>
+                                <SkipBack className="h-5 w-5" />
+                            </Button>
+                            <Button variant="default" size="icon" className="h-12 w-12 rounded-full" onClick={playPause}>
+                                {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 fill-current" />}
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={playNext}>
+                                <SkipForward className="h-5 w-5" />
+                            </Button>
+                            <Button variant="ghost" size="icon">
+                                {repeatMode === 'one' ? <Repeat1 className="h-5 w-5 text-primary" /> : <Repeat className="h-5 w-5" />}
+                            </Button>
+                        </div>
+                        <div className="flex items-center gap-2 w-full max-w-xl">
+                            <span className="text-xs font-mono text-muted-foreground">{formatTime(currentTime)}</span>
+                            <Slider 
+                                value={[currentTime]}
+                                max={duration || 1}
+                                onValueChange={([val]) => seek(val)}
+                                className="w-full"
+                            />
+                            <span className="text-xs font-mono text-muted-foreground">{formatTime(duration || 0)}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 w-1/4">
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <ListMusic className="h-5 w-5" />
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent className="w-full max-w-md p-0 flex flex-col">
+                                <SheetHeader className="p-6 pb-2">
+                                    <SheetTitle className="font-headline">Up Next</SheetTitle>
+                                </SheetHeader>
+                                <QueueView />
+                            </SheetContent>
+                        </Sheet>
+                        <Button variant="ghost" size="icon" onClick={toggleFullScreen}>
+                            <Maximize2 className="h-5 w-5" />
+                        </Button>
+                    </div>
+                </>
+            )}
          </div>
      </div>
   );
