@@ -52,31 +52,54 @@ def build_tree_and_index(df_path: str):
         'instrumentalness_%': 'instrumentalness',
         'liveness_%': 'liveness',
         'speechiness_%': 'speechiness',
-        'artists_name': 'artist'
+        'artist_name': 'artist' # General case for artist name
     }
+    # Also handle the specific case from the prompt
+    if 'artist_name' not in song_df.columns and 'artists_name' in song_df.columns:
+        column_renames['artists_name'] = 'artist'
+        
     song_df.rename(columns=column_renames, inplace=True)
     
     # Fill missing values and clean data
     for col in ['danceability', 'valence', 'energy', 'acousticness', 'instrumentalness', 'liveness', 'speechiness']:
         if col in song_df.columns:
+            # Convert to numeric, coercing errors
+            song_df[col] = pd.to_numeric(song_df[col], errors='coerce')
             song_df[col] = song_df[col].fillna(song_df[col].median())
-            
-    song_df['track_popularity'] = song_df['streams'].rank(pct=True) * 100
-    song_df['duration_ms'] = song_df.get('duration_ms', 180000)
+    
+    # Ensure streams is numeric before ranking
+    if 'streams' in song_df.columns:
+        song_df['streams'] = pd.to_numeric(song_df['streams'], errors='coerce').fillna(0)
+        song_df['track_popularity'] = song_df['streams'].rank(pct=True) * 100
+    else:
+        song_df['track_popularity'] = 50.0 # Default popularity
 
-    # Ensure all feature columns exist
+    # Ensure all required feature columns exist, creating them if necessary
+    if 'duration_ms' not in song_df.columns:
+        song_df['duration_ms'] = 180000 # Default duration
+    if 'time_signature' not in song_df.columns:
+        song_df['time_signature'] = 4
+    if 'loudness' not in song_df.columns:
+        song_df['loudness'] = -5.0
+        
+    # Final check for all feature columns
     for col in FEATURE_COLS:
         if col not in song_df.columns:
             song_df[col] = 0.0
             print(f"Warning: Column '{col}' not found. Initializing with zeros.")
+        else:
+             # Ensure all feature columns are numeric and filled
+            song_df[col] = pd.to_numeric(song_df[col], errors='coerce').fillna(0)
             
     # 2. Standardize Features
     scaler = StandardScaler()
-    scaled_features = scaler.fit_transform(song_df[FEATURE_COLS].values)
+    # Use only the columns that actually exist in the dataframe, in the correct order
+    existing_feature_cols = [col for col in FEATURE_COLS if col in song_df.columns]
+    scaled_features = scaler.fit_transform(song_df[existing_feature_cols].values)
     
     # 3. Build ANN-Tree
     print("Building ANN-tree...")
-    t = mnr.gen_ann_tree(song_df, FEATURE_COLS, 15, use_scaled_features=scaled_features)
+    t = mnr.gen_ann_tree(song_df, existing_feature_cols, 15, use_scaled_features=scaled_features)
     leaves = mnr.find_leaves(t)
     print(f"Tree built with {len(leaves)} leaves.")
 
@@ -152,9 +175,16 @@ class Recommender:
     def _find_track_by_fuzzy_match(self, title: str, artist: str) -> Optional[int]:
         """Fuzzy match track by title and artist."""
         combined_query = f"{title} {artist}"
-        choices = (self.song_df['track_name'] + " " + self.song_df.get('artist', '')).tolist()
-        best_match = process.extractOne(combined_query, choices, scorer=fuzz.WPath, score_cutoff=80)
+        # Ensure 'artist' column exists or default to empty string
+        artist_series = self.song_df.get('artist', pd.Series([''] * len(self.song_df)))
+        choices = (self.song_df['track_name'] + " " + artist_series).tolist()
+        
+        # Use rapidfuzz to find the best match
+        best_match = process.extractOne(combined_query, choices, scorer=fuzz.WRatio, score_cutoff=80)
+        
+        # extractOne returns (choice, score, index)
         return best_match[2] if best_match else None
+
 
     @lru_cache(maxsize=128)
     def get_recommendations(
@@ -168,8 +198,12 @@ class Recommender:
         """
         Get song recommendations for a given track_id or feature set.
         """
+        df_index = None
+        input_vector_scaled = None
+
         if track_id:
             df_index = self._find_track_by_id(track_id)
+            # Fuzzy match fallback if direct ID match fails
             if df_index is None:
                 track_row = self.song_df[self.song_df['track_id'] == track_id].iloc[0]
                 df_index = self._find_track_by_fuzzy_match(track_row['track_name'], track_row.get('artist', ''))
@@ -177,19 +211,25 @@ class Recommender:
             if df_index is not None:
                 input_vector_scaled = self.scaled_features[df_index]
             else:
-                return [] # Not found
+                print(f"Warning: Track with ID '{track_id}' not found.")
+                return [] 
         elif features:
-            df_index = None
-            feature_vector = np.array([features.get(col, 0) for col in FEATURE_COLS]).reshape(1, -1)
+            # Construct feature vector from input dict, respecting the order of FEATURE_COLS
+            feature_vector_list = [features.get(col, 0) for col in FEATURE_COLS]
+            feature_vector = np.array(feature_vector_list).reshape(1, -1)
             input_vector_scaled = self.scaler.transform(feature_vector)[0]
         else:
             return [] # Invalid input
+
+        if input_vector_scaled is None:
+            return []
 
         # Find candidate songs
         leaf_id = self.index_to_leaf.get(df_index) if df_index is not None else None
         
         candidate_indices = []
-        if leaf_id and len(self.leaf_members.get(leaf_id, [])) >= top_k + 1:
+        # Check if the found leaf is valid and has enough members
+        if leaf_id and self.leaf_members.get(leaf_id) and len(self.leaf_members.get(leaf_id, [])) >= top_k + 1:
             candidate_indices = self.leaf_members[leaf_id]
         else:
             # Fallback: expand to nearest neighbor leaves
@@ -197,14 +237,16 @@ class Recommender:
             sorted_leaf_indices = np.argsort(centroid_distances)
             
             for leaf_idx in sorted_leaf_indices:
+                # Get leaf_id from the sorted indices of leaf_ids list
                 sorted_leaf_id = self.leaf_ids[leaf_idx]
                 candidate_indices.extend(self.leaf_members.get(sorted_leaf_id, []))
                 if len(candidate_indices) >= top_k + 10: # Get a buffer
                     break
         
-        # Exclude input song
+        # Exclude input song from candidates
         if df_index is not None and df_index in candidate_indices:
-            candidate_indices.remove(df_index)
+            # Use list comprehension for safe removal
+            candidate_indices = [idx for idx in candidate_indices if idx != df_index]
             
         if not candidate_indices:
             return []
@@ -225,7 +267,7 @@ class Recommender:
             }
             results.append(result_item)
             
-        # Sort by distance
+        # Sort by distance initially
         results.sort(key=lambda x: x['distance'])
 
         if blend_with_popularity:
@@ -233,6 +275,7 @@ class Recommender:
             for r in results:
                 dist_norm = r['distance'] / max_dist if max_dist > 0 else 0
                 pop_norm = r['popularity'] / 100.0
+                # Lower score is better: low distance + high popularity (low 1-pop_norm)
                 r['combined_score'] = alpha * dist_norm + (1 - alpha) * (1 - pop_norm)
             
             results.sort(key=lambda x: x['combined_score'])
