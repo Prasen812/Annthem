@@ -5,6 +5,25 @@ import path from 'path';
 
 let songs: Song[] | null = null;
 
+function parseCsvLine(line: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"' && (i === 0 || line[i - 1] !== '\\')) {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current.trim());
+    return result;
+}
+
 function parseSongs(): Song[] {
   try {
     const csvPath = path.join(process.cwd(), 'src', 'data', 'spotify_songs.csv');
@@ -13,22 +32,22 @@ function parseSongs(): Song[] {
     
     if (lines.length < 2) return [];
 
-    const header = lines[0].split(',').map(h => h.trim());
+    const header = parseCsvLine(lines[0]);
     const records = lines.slice(1);
     
     const colIndices: { [key: string]: number } = {};
     header.forEach((h, i) => {
-        colIndices[h] = i;
+        colIndices[h.replace(/"/g, '')] = i;
     });
-
+    
     const requiredColumns = ['track_id', 'track_name'];
     if (requiredColumns.some(col => colIndices[col] === undefined)) {
         console.error("CSV is missing one of the required columns:", requiredColumns);
         return [];
     }
-    
+
     return records.map((line, index) => {
-      const data = line.split(',');
+      const data = parseCsvLine(line);
       if (data.length < header.length) return null;
 
       const id = data[colIndices['track_id']];
@@ -50,7 +69,7 @@ function parseSongs(): Song[] {
         tags: [],
         explicit: false,
         releaseDate: '',
-        provider: 'CSV',
+        provider: 'Spotify', // This is the fix
         recommendations: [],
       };
       
