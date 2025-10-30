@@ -17,7 +17,6 @@ export default function Home() {
   const songs: Song[] = getSongs();
   const trendingSongs = songs.slice(0, 12);
 
-  // Create a dynamic list of popular artists from the songs data
   const artistCountMap = new Map<string, number>();
   songs.forEach(song => {
     song.artists.forEach(artistName => {
@@ -30,7 +29,6 @@ export default function Home() {
     .slice(0, 12)
     .map(([name], index) => ({
       name,
-      // Use a deterministic placeholder image for each artist
       image: `https://picsum.photos/seed/${name.replace(/\s/g, '')}${index}/150/150`,
     }));
 
@@ -39,8 +37,8 @@ export default function Home() {
     <div className="h-full">
       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-2">
         {/* Left Sidebar */}
-        <div className="hidden md:flex flex-col gap-2 bg-black h-full">
-          <div className="bg-neutral-900 rounded-lg flex flex-col gap-y-4 h-[calc(100vh-160px)] sticky top-20">
+        <div className="hidden md:flex flex-col gap-2 bg-black h-full sticky top-20">
+          <div className="bg-neutral-900 rounded-lg flex flex-col gap-y-4 h-[calc(100vh-160px)]">
             <div className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-x-4">
@@ -74,7 +72,9 @@ export default function Home() {
                      </div>
                      <div className="flex flex-col items-start w-full gap-y-1">
                        <p className="font-semibold truncate w-full text-base">{song.title}</p>
-                       <p className="text-neutral-400 text-sm pb-2 w-full truncate">By {song.artists.join(', ')}</p>
+                       {song.artists.length > 0 && (
+                        <p className="text-neutral-400 text-sm pb-2 w-full truncate">By {song.artists.join(', ')}</p>
+                       )}
                      </div>
                    </div>
                 ))}

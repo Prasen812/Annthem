@@ -11,8 +11,6 @@ import React, {
 } from 'react';
 import type { Song, QueueItem } from '@/types';
 
-// This utility function is now defined inside the provider module
-// to ensure it's only part of the client-side bundle.
 const getSongById = (id: string, allSongs: Song[]): Song | undefined => {
   if (!allSongs || allSongs.length === 0) {
     return undefined;
@@ -24,7 +22,7 @@ const getSongById = (id: string, allSongs: Song[]): Song | undefined => {
 interface PlayerState {
   songs: Song[];
   queue: QueueItem[];
-  originalQueue: QueueItem[]; // For shuffle functionality
+  originalQueue: QueueItem[]; 
   currentIndex: number;
   isPlaying: boolean;
   volume: number;
@@ -71,21 +69,27 @@ const PlayerContext = createContext<{
   dispatch: React.Dispatch<PlayerAction>;
   audioRef: React.RefObject<HTMLAudioElement>;
   seek: (time: number) => void;
+  isSpotifyEmbed: boolean;
 } | null>(null);
 
 const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState => {
   switch (action.type) {
     case 'LOAD_SONGS':
-      // This logic ensures we don't wipe the songs array if it's already populated.
-      // And initializes the player with the full list of songs.
       if (state.songs.length > 0) {
         return state;
       }
       return { ...state, songs: action.payload };
 
-    case 'PLAY_PAUSE':
+    case 'PLAY_PAUSE': {
       if (state.queue.length === 0) return state;
+      const activeSong = state.queue[state.currentIndex]?.song;
+      const isSpotify = activeSong?.audioUrl?.includes('spotify');
+      // For spotify embeds, we can't control play/pause, so we just toggle our internal state
+      if (isSpotify) {
+        return { ...state, isPlaying: !state.isPlaying };
+      }
       return { ...state, isPlaying: !state.isPlaying };
+    }
     
     case 'SET_PLAYING':
       return { ...state, isPlaying: action.payload };
@@ -115,7 +119,6 @@ const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState =>
         return { ...state, expandedSongId: null };
       }
 
-      // If already expanded, just return
       if (state.expandedSongId === song.id) return state;
 
       const recQueueItems: QueueItem[] = recommendations
@@ -243,42 +246,51 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const activeSong = state.queue[state.currentIndex]?.song;
+  const isSpotifyEmbed = activeSong?.audioUrl?.includes('spotify.com') ?? false;
 
   useEffect(() => {
+    if (isSpotifyEmbed) {
+      if (audioRef.current) audioRef.current.pause();
+      return;
+    }
     if (audioRef.current) {
         state.isPlaying ? audioRef.current.play().catch(e => console.error("Playback error:", e)) : audioRef.current.pause();
     }
-  }, [state.isPlaying, activeSong]);
+  }, [state.isPlaying, activeSong, isSpotifyEmbed]);
 
   useEffect(() => {
-      if (audioRef.current && activeSong) {
-          if (audioRef.current.src !== activeSong.audioUrl) {
-            audioRef.current.src = activeSong.audioUrl;
-          }
-          if(state.isPlaying) {
-             audioRef.current.play().catch(e => console.error("Playback error on song change:", e));
-          }
-      }
-  }, [activeSong, state.isPlaying]);
+    if (isSpotifyEmbed) return;
+    if (audioRef.current && activeSong) {
+        if (audioRef.current.src !== activeSong.audioUrl) {
+          audioRef.current.src = activeSong.audioUrl;
+        }
+        if(state.isPlaying) {
+            audioRef.current.play().catch(e => console.error("Playback error on song change:", e));
+        }
+    }
+  }, [activeSong, state.isPlaying, isSpotifyEmbed]);
   
   const handleTimeUpdate = () => {
+      if (isSpotifyEmbed) return;
       if (audioRef.current) {
           dispatch({ type: 'UPDATE_TIME', payload: { currentTime: audioRef.current.currentTime, duration: audioRef.current.duration }});
       }
   };
 
   const handleTrackEnd = () => {
+      if (isSpotifyEmbed) return;
       dispatch({ type: 'HANDLE_TRACK_END' });
   };
   
   const seek = useCallback((time: number) => {
+    if (isSpotifyEmbed) return;
     if (audioRef.current) {
         audioRef.current.currentTime = time;
     }
-  }, []);
+  }, [isSpotifyEmbed]);
 
   return (
-    <PlayerContext.Provider value={{ state, dispatch, audioRef, seek }}>
+    <PlayerContext.Provider value={{ state, dispatch, audioRef, seek, isSpotifyEmbed }}>
       {children}
       <audio
         ref={audioRef}

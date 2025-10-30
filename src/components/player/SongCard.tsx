@@ -39,7 +39,9 @@ export function SongCard({ song }: SongCardProps) {
         <p className={cn('truncate', isThisSongActive ? 'text-primary' : 'text-white')}>
           {song.title}
         </p>
-        <p className="text-neutral-400 text-sm truncate">{song.artists.join(', ')}</p>
+        {song.artists.length > 0 && (
+          <p className="text-neutral-400 text-sm truncate">{song.artists.join(', ')}</p>
+        )}
       </div>
       {isThisSongActive && (
         <div className="ml-auto pr-4">

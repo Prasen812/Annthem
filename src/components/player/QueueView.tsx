@@ -50,7 +50,7 @@ export function QueueView() {
               </div>
               <div className="flex-1 truncate">
                 <p className={cn("font-medium text-sm truncate", isActive ? "text-primary" : "text-foreground/90")}>{item.song.title}</p>
-                <p className="text-xs text-muted-foreground truncate">{item.song.artists.join(', ')}</p>
+                {item.song.artists.length > 0 && <p className="text-xs text-muted-foreground truncate">{item.song.artists.join(', ')}</p>}
               </div>
               <div className="text-xs text-muted-foreground font-mono">
                 {Math.floor(item.song.durationMs / 60000)}:

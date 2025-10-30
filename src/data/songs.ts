@@ -11,7 +11,6 @@ function robustCsvParse(csvData: string): string[][] {
   let currentField = '';
   let inQuotedField = false;
 
-  // Normalize line endings
   csvData = csvData.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
   for (let i = 0; i < csvData.length; i++) {
@@ -20,7 +19,6 @@ function robustCsvParse(csvData: string): string[][] {
     if (inQuotedField) {
       if (char === '"') {
         if (i + 1 < csvData.length && csvData[i + 1] === '"') {
-          // Escaped quote
           currentField += '"';
           i++;
         } else {
@@ -32,7 +30,6 @@ function robustCsvParse(csvData: string): string[][] {
     } else {
       if (char === '"') {
         inQuotedField = true;
-        // If the field starts with a quote, discard any leading whitespace
         if (currentField.trim() !== '') {
             currentField += char;
         }
@@ -50,7 +47,6 @@ function robustCsvParse(csvData: string): string[][] {
     }
   }
 
-  // Add the last field and row if the file doesn't end with a newline
   if (currentField.trim() || currentRow.length > 0) {
      currentRow.push(currentField.trim());
      rows.push(currentRow);
@@ -58,7 +54,6 @@ function robustCsvParse(csvData: string): string[][] {
 
   return rows.filter(row => row.length > 1 || (row.length === 1 && row[0] !== ''));
 }
-
 
 function parseSongs(): Song[] {
   try {
@@ -76,7 +71,7 @@ function parseSongs(): Song[] {
         colIndices[h] = i;
     });
 
-    const requiredColumns = ['track_id', 'track_name', 'artist(s)_name'];
+    const requiredColumns = ['track_id', 'track_name'];
     if (requiredColumns.some(col => colIndices[col] === undefined)) {
         console.error("CSV is missing one of the required columns:", requiredColumns);
         return [];
@@ -87,21 +82,20 @@ function parseSongs(): Song[] {
 
       const id = line[colIndices['track_id']];
       const title = line[colIndices['track_name']];
-      const artists = line[colIndices['artist(s)_name']]?.split(',').map(a => a.trim()).filter(a => a) || ['Unknown Artist'];
       
-      if (!id || !title || artists.length === 0) {
-        console.warn(`Skipping row ${index + 2} due to missing id, track_name, or artist(s)_name`);
+      if (!id || !title) {
+        console.warn(`Skipping row ${index + 2} due to missing track_id or track_name`);
         return null;
       }
       
       const songData: Song = {
         id,
         title,
-        artists,
+        artists: [], // Artist name is not available for now
         album: 'Unknown Album',
-        durationMs: 180000, // Placeholder duration
-        coverUrl: '', // Default to empty string to trigger placeholder
-        audioUrl: '', // Placeholder audio
+        durationMs: 180000,
+        coverUrl: '', // Will trigger placeholder
+        audioUrl: `https://open.spotify.com/embed/track/${id}`,
         tags: [],
         explicit: false,
         releaseDate: '',
