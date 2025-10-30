@@ -1,0 +1,6 @@
+mannr.py
+setup.py
+mannr.egg-info/PKG-INFO
+mannr.egg-info/SOURCES.txt
+mannr.egg-info/dependency_links.txt
+mannr.egg-info/top_level.txt

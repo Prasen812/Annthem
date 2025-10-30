@@ -1,12 +1,9 @@
-
 pandas
 numpy
+matplotlib
 scikit-learn
-mannr
 Flask
 Flask-Cors
 gunicorn
 rapidfuzz
 cachetools
-
-    

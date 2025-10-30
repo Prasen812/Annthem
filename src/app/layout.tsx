@@ -5,8 +5,8 @@ import { PlayerProvider } from '@/providers/PlayerProvider';
 import { AppHeader } from '@/components/AppHeader';
 
 export const metadata: Metadata = {
-  title: 'Cascade Player',
-  description: 'A modern music web app by Firebase Studio',
+  title: 'Annthem',
+  description: 'A modern music web recommendation system',
 };
 
 export default function RootLayout({

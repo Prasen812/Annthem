@@ -9,27 +9,59 @@ Original file is located at
 
 import pandas as pd
 import numpy as np
-import seaborn as sns
 import matplotlib.pyplot as plt
 import mannr as mnr
+from typing import Optional, List
 
-song=pd.read_csv('spotify_songs.csv',encoding="latin1" , index_col = False)
-song
+FEATURES = [
+    'acousticness', 'duration_ms', 'key', 'mode', 'instrumentalness',
+    'track_popularity', 'speechiness', 'time_signature', 'valence',
+    'liveness', 'loudness', 'danceability', 'tempo', 'energy'
+]
 
-song.columns
+class MannrRecommender:
+    def __init__(self, csv_path: str = 'spotify_songs.csv'):
+        self.song_df = pd.read_csv(csv_path, encoding="latin1", index_col=False)
+        self.song_df.dropna(axis=1, inplace=True)
+        self.song_df = self.song_df.reset_index(drop=True)
+        self.t = mnr.gen_ann_tree(self.song_df, FEATURES, 15)
+        self.leaves = mnr.find_leaves(self.t)
+        self.track_to_leaf = self._map_track_to_leaf()
 
-song.shape,song.select_dtypes('number').columns[::-1],song.isnull().any()
+    def _map_track_to_leaf(self):
+        mapping = {}
+        for i, leaf in enumerate(self.leaves):
+            for idx in leaf.data.index:
+                mapping[self.song_df.loc[idx, 'track_id']] = i
+        return mapping
 
-song.dropna(axis=1,inplace=True)
-song.isnull().any()
+    def get_recommendations(self, track_id: str, top_k: int = 3) -> List[dict]:
+        leaf_idx = self.track_to_leaf.get(track_id)
+        if leaf_idx is None:
+            return []
+        leaf_data = self.leaves[leaf_idx].data
+        # Drop the current track from candidates
+        rec_candidates = leaf_data[leaf_data['track_id'] != track_id]
+        # Take up to top_k candidates (or all if <top_k)
+        recs = rec_candidates.head(top_k)
+        result = []
+        for _, row in recs.iterrows():
+            result.append({
+                'id': row['track_id'],
+                'title': row.get('track_name', ''),
+                'artist': row.get('artist', ''),
+            })
+        return result
 
-t=mnr.gen_ann_tree(song,['acousticness', 'duration_ms', 'key', 'mode', 'instrumentalness',
-        'track_popularity', 'speechiness', 'time_signature', 'valence',
-        'liveness', 'loudness', 'danceability', 'tempo', 'energy'],15)
+if __name__ == '__main__':
+    # Test run (prints leaves and sample recommendations)
+    recommender = MannrRecommender('spotify_songs.csv')
+    print(f"Built {len(recommender.leaves)} leaves.")
+    # print all clusters
+    for leaf in recommender.leaves:
+        print(leaf.data[['track_name', 'track_id']])
+    # Sample recs for first song
+    tid = recommender.song_df.iloc[0]['track_id']
+    print(f"Recommendations for {tid}:", recommender.get_recommendations(tid))
 
-l=mnr.find_leaves(t)
-for i in l:
-    print(i.data[['track_name','track_id']])
-
-# mnr.plot_leaves(l,['danceability_%','speechiness_%'])
 

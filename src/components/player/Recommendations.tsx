@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import type { Song } from '@/types';
 import Image from 'next/image';
 import { usePlayer } from '@/providers/PlayerProvider';
-import { Music, Volume2 } from 'lucide-react';
+import { Music, Volume2, Play, Pause } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SongCoverPlaceholder } from './SongCoverPlaceholder';
@@ -85,7 +85,7 @@ export function Recommendations({ song }: RecommendationsProps) {
 
   return (
     <div className="pl-12 pr-4 pt-2 pb-4">
-      <h4 className="font-headline text-sm font-semibold mb-2 text-muted-foreground">mannr recommendations for u</h4>
+      <h4 className="font-headline text-sm font-semibold mb-2 text-muted-foreground">mannr recommendations for you</h4>
       <div className="space-y-1">
         {recommendations.map(recSong => {
           const isThisSongActive = activeSong?.id === recSong.id;
