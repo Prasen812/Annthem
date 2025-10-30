@@ -284,7 +284,7 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleTrackEnd}
         onLoadedMetadata={handleTimeUpdate}
-        src={!isSpotifyEmbed && activeSong ? activeSong.audioUrl : ''}
+        src={!isSpotifyEmbed && activeSong ? activeSong.audioUrl : undefined}
       />
     </PlayerContext.Provider>
   );
