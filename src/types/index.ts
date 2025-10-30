@@ -10,7 +10,8 @@ export interface Song {
   explicit: boolean;
   releaseDate: string;
   provider: string;
-  recommendations: Recommendation[];
+  // This is now optional as it's fetched dynamically
+  recommendations?: Recommendation[];
 }
 
 export interface Recommendation {

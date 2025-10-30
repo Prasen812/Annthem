@@ -11,14 +11,6 @@ import React, {
 } from 'react';
 import type { Song, QueueItem } from '@/types';
 
-const getSongById = (id: string, allSongs: Song[]): Song | undefined => {
-  if (!allSongs || allSongs.length === 0) {
-    return undefined;
-  }
-  return allSongs.find((song) => song.id === id);
-};
-
-
 interface PlayerState {
   songs: Song[];
   queue: QueueItem[];
@@ -44,7 +36,7 @@ type PlayerAction =
   | { type: 'HANDLE_TRACK_END' }
   | { type: 'SET_QUEUE'; payload: QueueItem[] }
   | { type: 'ADD_TO_QUEUE'; payload: QueueItem }
-  | { type: 'SET_EXPANDED_SONG'; payload: { song: Song; recommendations: Song[] } }
+  | { type: 'EXPAND_AND_PLAY'; payload: { song: Song } }
   | { type: 'TOGGLE_SHUFFLE' }
   | { type: 'TOGGLE_FULLSCREEN' }
   | { type: 'UPDATE_TIME'; payload: { currentTime: number; duration: number } };
@@ -89,13 +81,13 @@ const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState =>
       return { ...state, isPlaying: action.payload };
 
     case 'PLAY_SONG': {
-      const { song } = action.payload;
+      const { song, originTrackId } = action.payload;
       const newQueueItem: QueueItem = {
         id: `queue-${song.id}-${Date.now()}`,
         song,
-        source: action.payload.originTrackId ? 'recommendation' : 'mainList',
+        source: originTrackId ? 'recommendation' : 'user',
         addedAt: Date.now(),
-        originTrackId: action.payload.originTrackId,
+        originTrackId,
       };
 
       const existingIndex = state.queue.findIndex((item) => item.song.id === song.id);
@@ -107,44 +99,41 @@ const playerReducer = (state: PlayerState, action: PlayerAction): PlayerState =>
       return { ...state, queue: newQueue, currentIndex: newQueue.length - 1, isPlaying: true };
     }
 
-    case 'SET_EXPANDED_SONG': {
-      const { song, recommendations } = action.payload;
-      if (!song) {
-        return { ...state, expandedSongId: null };
-      }
-
-      if (state.expandedSongId === song.id) return state;
-
-      const recQueueItems: QueueItem[] = recommendations
-        .map((recSong) => {
-          if (state.queue.find((item) => item.song.id === recSong.id)) return null;
-          return {
-            id: `queue-${recSong.id}-${Date.now()}`,
-            song: recSong,
-            source: 'recommendation',
+    case 'EXPAND_AND_PLAY': {
+        const { song } = action.payload;
+        
+        // The recommendations are fetched in the UI component. Here we just handle playback.
+        // If there are recommendations for this song, they should be added to the queue after this one.
+        
+        const newQueueItem: QueueItem = {
+            id: `queue-${song.id}-${Date.now()}`,
+            song,
+            source: 'mainList',
             addedAt: Date.now(),
-            originTrackId: song.id,
-          };
-        })
-        .filter((item): item is QueueItem => item !== null);
+        };
 
-      if (recQueueItems.length === 0) {
-        const currentSongInQueue = state.queue.find(q => q.song.id === song.id);
-        if (!currentSongInQueue) {
-             const songToAdd = state.songs.find(s => s.id === song.id);
-             if (songToAdd) {
-                const newItem: QueueItem = { id: `queue-${songToAdd.id}-${Date.now()}`, song: songToAdd, source: 'mainList', addedAt: Date.now() };
-                const newQueue = [...state.queue, newItem];
-                return { ...state, expandedSongId: song.id, queue: newQueue, currentIndex: newQueue.length -1, isPlaying: true };
-             }
+        const existingIndex = state.queue.findIndex(item => item.song.id === song.id);
+
+        if (existingIndex !== -1) {
+            // Song is already in the queue, just play it
+            return { ...state, currentIndex: existingIndex, isPlaying: true, expandedSongId: song.id };
         }
-        return { ...state, expandedSongId: song.id, isPlaying: state.queue.length > 0 };
-      }
-      
-      const insertionIndex = state.currentIndex + 1;
-      const newQueue = [...state.queue.slice(0, insertionIndex), ...recQueueItems, ...state.queue.slice(insertionIndex)];
-      
-      return { ...state, expandedSongId: song.id, queue: newQueue, currentIndex: insertionIndex, isPlaying: true };
+
+        // Add the new song to the queue and play it.
+        const insertionIndex = state.currentIndex + 1;
+        const newQueue = [
+            ...state.queue.slice(0, insertionIndex),
+            newQueueItem,
+            ...state.queue.slice(insertionIndex)
+        ];
+
+        return {
+            ...state,
+            queue: newQueue,
+            currentIndex: insertionIndex,
+            isPlaying: true,
+            expandedSongId: song.id,
+        };
     }
     
     case 'HANDLE_TRACK_END': {
@@ -299,11 +288,7 @@ export const usePlayer = () => {
   const { state, dispatch, ...rest } = context;
 
   const expandAndPlayRecommendations = (song: Song) => {
-    const songWithRecs = getSongById(song.id, state.songs);
-    const recommendations = songWithRecs?.recommendations
-        .map(r => getSongById(r.songId, state.songs))
-        .filter((s): s is Song => !!s) || [];
-    dispatch({ type: 'SET_EXPANDED_SONG', payload: { song, recommendations } });
+    dispatch({ type: 'EXPAND_AND_PLAY', payload: { song } });
   };
   
   const playPause = () => dispatch({ type: 'PLAY_PAUSE' });
