@@ -65,14 +65,14 @@ export default function Home() {
                    <div key={song.id} className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
                      <div className="relative aspect-square w-full h-full rounded-md overflow-hidden mb-4">
                         {song.coverUrl ? (
-                          <Image className="object-cover" src={song.coverUrl} fill alt={song.album} data-ai-hint="album cover" />
+                          <Image className="object-cover" src={song.coverUrl} fill alt={song.album || 'Album Art'} data-ai-hint="album cover" />
                         ) : (
                           <SongCoverPlaceholder song={song} />
                         )}
                      </div>
                      <div className="flex flex-col items-start w-full gap-y-1">
                        <p className="font-semibold truncate w-full text-base">{song.title}</p>
-                       {song.artists.length > 0 && (
+                       {song.artists && song.artists.length > 0 && (
                         <p className="text-neutral-400 text-sm pb-2 w-full truncate">By {song.artists.join(', ')}</p>
                        )}
                      </div>

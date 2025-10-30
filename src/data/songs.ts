@@ -5,66 +5,16 @@ import path from 'path';
 
 let songs: Song[] | null = null;
 
-function robustCsvParse(csvData: string): string[][] {
-  const rows: string[][] = [];
-  let currentRow: string[] = [];
-  let currentField = '';
-  let inQuotedField = false;
-
-  csvData = csvData.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-
-  for (let i = 0; i < csvData.length; i++) {
-    const char = csvData[i];
-
-    if (inQuotedField) {
-      if (char === '"') {
-        if (i + 1 < csvData.length && csvData[i + 1] === '"') {
-          currentField += '"';
-          i++;
-        } else {
-          inQuotedField = false;
-        }
-      } else {
-        currentField += char;
-      }
-    } else {
-      if (char === '"') {
-        inQuotedField = true;
-        if (currentField.trim() !== '') {
-            currentField += char;
-        }
-      } else if (char === ',') {
-        currentRow.push(currentField.trim());
-        currentField = '';
-      } else if (char === '\n') {
-        currentRow.push(currentField.trim());
-        rows.push(currentRow);
-        currentRow = [];
-        currentField = '';
-      } else {
-        currentField += char;
-      }
-    }
-  }
-
-  if (currentField.trim() || currentRow.length > 0) {
-     currentRow.push(currentField.trim());
-     rows.push(currentRow);
-  }
-
-  return rows.filter(row => row.length > 1 || (row.length === 1 && row[0] !== ''));
-}
-
 function parseSongs(): Song[] {
   try {
-    const csvPath = path.join(process.cwd(), 'src', 'data', 'songs.csv');
+    const csvPath = path.join(process.cwd(), 'src', 'data', 'spotify_songs.csv');
     const csvData = fs.readFileSync(csvPath, 'utf-8');
-    const records = robustCsvParse(csvData);
+    const lines = csvData.trim().split('\n');
     
-    if (records.length < 2) return [];
+    if (lines.length < 2) return [];
 
-    const header = records[0].map(h => h.trim());
-    const lines = records.slice(1);
+    const header = lines[0].split(',').map(h => h.trim());
+    const records = lines.slice(1);
     
     const colIndices: { [key: string]: number } = {};
     header.forEach((h, i) => {
@@ -77,11 +27,12 @@ function parseSongs(): Song[] {
         return [];
     }
     
-    return lines.map((line, index) => {
-      if (line.length < header.length) return null;
+    return records.map((line, index) => {
+      const data = line.split(',');
+      if (data.length < header.length) return null;
 
-      const id = line[colIndices['track_id']];
-      const title = line[colIndices['track_name']];
+      const id = data[colIndices['track_id']];
+      const title = data[colIndices['track_name']];
       
       if (!id || !title) {
         console.warn(`Skipping row ${index + 2} due to missing track_id or track_name`);
