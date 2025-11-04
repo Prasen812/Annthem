@@ -7,6 +7,8 @@ import { getSongs } from '@/data/songs';
 import type { Song } from '@/types';
 import { SongCoverPlaceholder } from '@/components/player/SongCoverPlaceholder';
 import { AppFooter } from '@/components/AppFooter';
+import SearchAddSong from '@/components/SearchAddSong';
+import TrendingSongCard from '@/components/player/TrendingSongCard';
 
 type Artist = {
   name: string;
@@ -49,6 +51,9 @@ export default function Home() {
                   <Plus />
                 </button>
               </div>
+                <div className="mt-3">
+                  <SearchAddSong />
+                </div>
             </div>
             <div className="flex flex-col gap-y-2 px-3 flex-1 overflow-y-auto">
               <SongList songs={songs} />
@@ -63,20 +68,9 @@ export default function Home() {
                 <h2 className="text-2xl font-bold mb-4">Trending Songs</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                   {trendingSongs.map((song) => (
-                    <div key={song.id} className="relative group flex flex-col items-center justify-center rounded-md overflow-hidden gap-x-4 bg-neutral-800/50 cursor-pointer hover:bg-neutral-800 transition p-4">
-                      <div className="relative aspect-square w-full h-full rounded-md overflow-hidden mb-4">
-                          {song.coverUrl ? (
-                            <Image className="object-cover" src={song.coverUrl} fill alt={song.album || 'Album Art'} data-ai-hint="album cover" />
-                          ) : (
-                            <SongCoverPlaceholder song={song} />
-                          )}
-                      </div>
-                      <div className="flex flex-col items-start w-full gap-y-1">
-                        <p className="font-semibold truncate w-full text-base">{song.title}</p>
-                        {song.artists && song.artists.length > 0 && (
-                          <p className="text-neutral-400 text-sm pb-2 w-full truncate">By {song.artists.join(', ')}</p>
-                        )}
-                      </div>
+                    <div key={song.id}>
+                      {/* client-side clickable card that uses PlayerProvider to play */}
+                      <TrendingSongCard song={song} />
                     </div>
                   ))}
                 </div>

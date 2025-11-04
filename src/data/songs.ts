@@ -27,18 +27,34 @@ function parseCsvLine(line: string): string[] {
 function parseSongs(): Song[] {
   try {
     const csvPath = path.join(process.cwd(), 'src', 'data', 'spotify_songs.csv');
-    const csvData = fs.readFileSync(csvPath, 'utf-8');
-    const lines = csvData.trim().split('\n');
-    
-    if (lines.length < 2) return [];
+    const userLibPath = path.join(process.cwd(), 'src', 'data', 'user_library.csv');
 
-    const header = parseCsvLine(lines[0]);
-    const records = lines.slice(1);
+    const parts: string[] = [];
+    if (fs.existsSync(csvPath)) {
+      parts.push(fs.readFileSync(csvPath, 'utf-8'));
+    }
+    if (fs.existsSync(userLibPath)) {
+      parts.push(fs.readFileSync(userLibPath, 'utf-8'));
+    }
+    if (parts.length === 0) return [];
+
+    // Merge files, keeping header from the first file and skipping subsequent headers
+    const allLines = parts.map(p => p.trim().split('\n'));
+    const header = allLines[0][0];
+    const records: string[] = [];
+    for (let i = 0; i < allLines.length; i++) {
+      const lines = allLines[i];
+      const start = (i === 0) ? 1 : 1; // skip header for each file
+      for (let j = start; j < lines.length; j++) records.push(lines[j]);
+    }
+    
+    const headerCols = parseCsvLine(header);
+    const recordsList = records;
     
     const colIndices: { [key: string]: number } = {};
-    header.forEach((h, i) => {
-        colIndices[h.replace(/"/g, '')] = i;
-    });
+  headerCols.forEach((h, i) => {
+    colIndices[h.replace(/"/g, '')] = i;
+  });
     
     const requiredColumns = ['track_id', 'track_name'];
     if (requiredColumns.some(col => colIndices[col] === undefined)) {
@@ -46,9 +62,9 @@ function parseSongs(): Song[] {
         return [];
     }
 
-    return records.map((line, index) => {
+    return recordsList.map((line, index) => {
       const data = parseCsvLine(line);
-      if (data.length < header.length) return null;
+  if (data.length < headerCols.length) return null;
 
       const id = data[colIndices['track_id']];
       const title = data[colIndices['track_name']];
