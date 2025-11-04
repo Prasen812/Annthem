@@ -1,0 +1,5 @@
+unnamed,energy,tempo,danceability,playlist_genre,loudness,liveness,valence,time_signature,speechiness,track_popularity,track_id,track_name,track_album_release_date,instrumentalness,mode,key,duration_ms,acousticness,playlist_subgenre
+550,0.546,118.051,0.76,gaming,-13.092,0.103,0.113,4,0.0616,73,5NAOhPAZ57eFAXr3qatS6i,Breathe,2024-02-16,0.924,1,11,170847,0.0284,modern
+1402,0.709,99.993,0.725,latin,-5.017,0.114,0.648,4,0.129,79,5bi0gh89wRuH2OgjdAKFsb,Santa,2024-04-04,0.000189,0,3,193039,0.321,reggaeton
+1216,0.768,80.063,0.78,blues,-4.325,0.518,0.507,4,0.238,79,3UmaczJpikHgJFyBTAJVoz,Stan,2000-05-23,2.34e-06,0,6,404107,0.0371,classic
+1401,0.543,98.992,0.898,latin,-8.317,0.338,0.359,4,0.121,71,7DOh0tBGnyMt6C5OO7o8Yq,Nada,2019-06-03,0.000623,0,6,305114,0.343,reggaeton
